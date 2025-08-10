@@ -6,3 +6,10 @@ RUN apt-get update && apt-get install -y build-essential libpq-dev --no-install-
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
+
+# Copy and make entrypoint script executable
+COPY entrypoint.sh /code/entrypoint.sh
+RUN chmod +x /code/entrypoint.sh
+
+# Set the entrypoint
+ENTRYPOINT ["bash", "/code/entrypoint.sh"]

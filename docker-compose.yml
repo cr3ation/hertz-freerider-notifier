@@ -12,9 +12,6 @@ services:
     image: redis:7
   app:
     build: .
-    command: >
-      sh -c "python manage.py migrate &&
-             gunicorn hertz_notifier.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/code
     environment:

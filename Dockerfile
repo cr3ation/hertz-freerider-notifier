@@ -7,9 +7,11 @@ COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
 
-# Copy and make entrypoint script executable
+# Copy and make entrypoint scripts executable
 COPY entrypoint.sh /code/entrypoint.sh
+COPY entrypoint-worker-debug.sh /code/entrypoint-worker-debug.sh
 RUN chmod +x /code/entrypoint.sh
+RUN chmod +x /code/entrypoint-worker-debug.sh
 
 # Set the entrypoint
 ENTRYPOINT ["bash", "/code/entrypoint.sh"]

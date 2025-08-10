@@ -33,9 +33,11 @@ services:
       - redis
   worker:
     build: .
-    command: celery -A hertz_notifier worker --loglevel=info
+    entrypoint: ["/code/entrypoint-worker-debug.sh"]
     volumes:
       - .:/code
+    ports:
+      - "5678:5678"
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DB_NAME=${DB_NAME}

@@ -156,6 +156,26 @@ See `.env.sample` for the complete configuration template.
    - Records notified rides to prevent duplicate alerts
 3. **Django Web App** provides the user interface for managing search rules
 
+### Manual Testing
+
+For testing purposes, you can manually trigger the monitoring task instead of waiting for the 2-minute schedule:
+
+```bash
+# Trigger the task immediately
+docker compose exec app python manage.py shell -c "from scheduler.tasks import check_hertz; check_hertz.delay()"
+```
+
+This is useful when:
+- Testing your search configurations
+- Debugging notifications
+- Verifying the system is working correctly
+
+You can monitor the task execution by watching the worker logs:
+
+```bash
+docker compose logs -f worker
+```
+
 ## Development
 
 To make changes to the code:

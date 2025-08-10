@@ -51,29 +51,31 @@ This will start all services:
 - **worker**: Celery worker for background tasks
 - **beat**: Celery beat scheduler
 
-### 4. Create a superuser account
-
-After the containers are running, create an admin account:
+### 4. Start the application
 
 ```bash
-docker compose exec app python manage.py createsuperuser
+docker compose up --build -d
 ```
 
-Follow the prompts to create your admin username, email, and password.
-
-Alternatively, you can create a user programmatically:
-
-```bash
-docker compose exec app python manage.py shell -c "
-from django.contrib.auth.models import User
-User.objects.create_superuser('admin', 'admin@example.com', 'your_secure_password')
-print('Superuser created successfully')
-"
-```
+This will automatically:
+- **Build the containers** with all dependencies
+- **Start all services**:
+  - **app**: Django web application (port 8000)
+  - **db**: PostgreSQL database
+  - **redis**: Redis for Celery
+  - **worker**: Celery worker for background tasks
+  - **beat**: Celery beat scheduler
+- **Initialize the database** (create migrations and run them)
+- **Create a default admin user** (username: `admin`, password: `admin123`)
+- **Collect static files**
 
 ### 5. Access the application
 
-Open <http://localhost:8000> in your browser and log in with your admin credentials to start adding search rules.
+Open <http://localhost:8000> in your browser and log in with:
+- **Username**: `admin`
+- **Password**: `admin123`
+
+You can now start adding search rules!
 
 ## Troubleshooting
 
@@ -87,7 +89,7 @@ docker volume rm hertz_freerider_notifier_postgres_data
 docker compose up --build -d
 ```
 
-Then recreate your superuser as described above.
+The application will automatically recreate the database and admin user.
 
 ### Check Service Status
 
@@ -106,7 +108,7 @@ docker compose logs db
 
 ### Reset Admin Password
 
-If you forget your admin password:
+If you need to change the admin password:
 
 ```bash
 docker compose exec app python manage.py shell -c "
@@ -116,6 +118,14 @@ user.set_password('new_password')
 user.save()
 print('Password updated')
 "
+```
+
+### Create Additional Users
+
+To create additional admin users:
+
+```bash
+docker compose exec app python manage.py createsuperuser
 ```
 
 ## Environment variables

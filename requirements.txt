@@ -6,3 +6,4 @@ requests>=2.32
 python-dotenv>=1.0
 gunicorn>=22.0
 debugpy>=1.8.0
+whitenoise>=6.0

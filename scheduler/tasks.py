@@ -11,42 +11,60 @@ def check_hertz():
         logging.exception('Fetching error: %s', e)
         return
 
-    # If the API returns a dict with 'results', otherwise adjust
-    if isinstance(data, dict):
-        routes = data.get('results', [])
-    elif isinstance(data, list):
-        routes = data
-    else:
-        routes = []
+    # Handle the actual API structure: array of location pairs with routes
+    if not isinstance(data, list):
+        logging.warning('Unexpected API response format, expected list')
+        return
 
     for search in SavedSearch.objects.select_related('owner'):
-        for ride in routes:
-            ride_id = str(ride.get('id') or ride.get('reference') or ride.get('uuid'))
-            origin = ride.get('start_city') or ride.get('fromLocation') or ''
-            destination = ride.get('end_city') or ride.get('toLocation') or ''
+        for location_pair in data:
+            # Each location pair has pickupLocationName, returnLocationName, and routes array
+            routes = location_pair.get('routes', [])
+            
+            for route in routes:
+                # Extract route data using correct API field names
+                route_id = str(route.get('id', ''))
+                if not route_id:
+                    continue
+                
+                # Get pickup and return location details
+                pickup_location = route.get('pickupLocation', {})
+                return_location = route.get('returnLocation', {})
+                
+                origin = pickup_location.get('name', '')
+                destination = return_location.get('name', '')
+                
+                # Get datetime strings and convert to dates
+                pickup_datetime_str = route.get('availableAt', '')
+                return_datetime_str = route.get('latestReturn', '')
+                
+                try:
+                    pickup_date = datetime.datetime.fromisoformat(pickup_datetime_str[:10]).date()
+                    return_date = datetime.datetime.fromisoformat(return_datetime_str[:10]).date()
+                except (ValueError, IndexError):
+                    continue
 
-            pickup_date_str = ride.get('start_date') or ride.get('pickupDate') or ''
-            dropoff_date_str = ride.get('end_date') or ride.get('dropoffDate') or ''
+                # Check if dates are within search criteria
+                if not (search.date_from <= pickup_date <= search.date_to):
+                    continue
+                if not (search.date_from <= return_date <= search.date_to):
+                    continue
+                    
+                # Check if locations match search criteria
+                if not wildcard_match(search.origin, origin):
+                    continue
+                if not wildcard_match(search.destination, destination):
+                    continue
 
-            try:
-                pickup_date = datetime.datetime.fromisoformat(pickup_date_str[:10]).date()
-                dropoff_date = datetime.datetime.fromisoformat(dropoff_date_str[:10]).date()
-            except Exception:
-                continue
+                # Skip if already notified
+                if NotifiedRide.objects.filter(ride_id=route_id).exists():
+                    continue
 
-            if not (search.date_from <= pickup_date <= search.date_to):
-                continue
-            if not (search.date_from <= dropoff_date <= search.date_to):
-                continue
-            if not wildcard_match(search.origin, origin):
-                continue
-            if not wildcard_match(search.destination, destination):
-                continue
-
-            if NotifiedRide.objects.filter(ride_id=ride_id).exists():
-                continue
-
-            msg = f"{origin} → {destination} {pickup_date}–{dropoff_date}"
-            ride_url = f"https://www.hertzfreerider.se/transport-routes/{ride_id}"
-            send_pushover(msg, ride_url)
-            NotifiedRide.objects.create(ride_id=ride_id)
+                # Send notification with additional useful info
+                car_model = route.get('carModel', 'Unknown car')
+                distance = route.get('distance', 0)
+                
+                msg = f"{origin} → {destination}\n{pickup_date} - {return_date}\n{car_model}\n{distance:.0f} km"
+                ride_url = f"https://www.hertzfreerider.se/transport-routes/{route_id}"
+                send_pushover(msg, ride_url)
+                NotifiedRide.objects.create(ride_id=route_id)

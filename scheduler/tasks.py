@@ -12,7 +12,12 @@ def check_hertz():
         return
 
     # If the API returns a dict with 'results', otherwise adjust
-    routes = data.get('results', data if isinstance(data, list) else [])
+    if isinstance(data, dict):
+        routes = data.get('results', [])
+    elif isinstance(data, list):
+        routes = data
+    else:
+        routes = []
 
     for search in SavedSearch.objects.select_related('owner'):
         for ride in routes:

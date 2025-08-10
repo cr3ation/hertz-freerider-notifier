@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────
+#  Python / Django
+# ─────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+.env
+#.env.*
+*.sqlite3
+# Local settings that shouldn’t ship
+local_settings.py
+# VSCode/PyCharm/etc.
+.vscode/
+.idea/
+
+# ─────────────────────────────────────────
+#  Static & media artifacts
+# ─────────────────────────────────────────
+staticfiles/
+media/
+
+# ─────────────────────────────────────────
+#  Celery / coverage / profiling
+# ─────────────────────────────────────────
+celerybeat-schedule
+celerybeat.*.pid
+*.coverage
+htmlcov/
+.coverage.*
+
+# ─────────────────────────────────────────
+#  Logs & dumps
+# ─────────────────────────────────────────
+*.log
+*.sql
+*.pot
+*.mo
+*.dump
+*.bak
+
+# ─────────────────────────────────────────
+#  Docker / Compose
+# ─────────────────────────────────────────
+# Build cache & volumes mounted by Compose
+**/.docker/
+docker-compose.override.yml
+# Named-volume data (Postgres etc.)
+postgres_data/
+redis_data/
+
+# ─────────────────────────────────────────
+#  Node / front-end (if you later add JS build)
+# ─────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─────────────────────────────────────────
+#  macOS / Windows cruft
+# ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─────────────────────────────────────────
+#  Backup & temp editors
+# ─────────────────────────────────────────
+*~
+*.swp
+*.swo

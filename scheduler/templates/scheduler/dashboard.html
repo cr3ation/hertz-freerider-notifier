@@ -1,0 +1,40 @@
+{% extends 'scheduler/base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6 col-lg-5 mb-4">
+        <div class="card p-4">
+            <h5 class="mb-3">Add new alert</h5>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-primary w-100">Save</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-7">
+        <div class="card p-4">
+            <h5 class="mb-3">Your searches</h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Date From</th><th>Date To</th><th>Origin</th><th>Destination</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for s in searches %}
+                    <tr>
+                        <td>{{ s.date_from }}</td>
+                        <td>{{ s.date_to }}</td>
+                        <td>{{ s.origin }}</td>
+                        <td>{{ s.destination }}</td>
+                        <td><a href="{% url 'delete_search' s.pk %}" class="btn btn-sm btn-danger">Delete</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">No searches yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

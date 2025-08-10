@@ -29,10 +29,13 @@ python manage.py migrate
 # Create superuser if it doesn't exist
 echo "Creating superuser if needed..."
 python manage.py shell -c "
+import os
 from django.contrib.auth.models import User
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-    print('Superuser created: admin/admin123')
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username, f'{username}@example.com', password)
+    print(f'Superuser created: {username}/{password}')
 else:
     print('Superuser already exists')
 "

@@ -15,17 +15,19 @@ services:
     volumes:
       - .:/code
     environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=${DEBUG}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - PUSHOVER_USER=${PUSHOVER_USER}
-      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
-      - CELERY_BROKER_URL=redis://redis:6379/0
+    - SECRET_KEY=${SECRET_KEY}
+    - DEBUG=${DEBUG}
+    - DB_NAME=${DB_NAME}
+    - DB_USER=${DB_USER}
+    - DB_PASS=${DB_PASS}
+    - DB_HOST=${DB_HOST}
+    - DB_PORT=${DB_PORT}
+    - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    - PUSHOVER_USER=${PUSHOVER_USER}
+    - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
+    - CELERY_BROKER_URL=redis://redis:6379/0
+    - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
+    - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
     ports:
       - "8000:8000"
     depends_on:

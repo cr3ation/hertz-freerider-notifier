@@ -41,6 +41,13 @@ else:
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-# Start the application
-echo "Starting Gunicorn..."
-exec gunicorn hertz_notifier.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+# Decide how to start based on DEBUG variable
+if [ "$DEBUG" = "1" ]; then
+    echo "Starting Celery Worker with debugpy..."
+    echo "Debugger listening on port 5678. You can attach a debugger at any time."
+    # To wait for the debugger to attach before starting, add --wait-for-client to the command below
+    exec python -m debugpy --listen 0.0.0.0:5678 -m celery -A hertz_notifier worker --loglevel=info
+else
+    echo "Starting Gunicorn..."
+    exec gunicorn hertz_notifier.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+fi

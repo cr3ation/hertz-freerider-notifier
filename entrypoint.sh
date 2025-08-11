@@ -48,6 +48,7 @@ python manage.py collectstatic --noinput
 if [ "$DEBUG" = "1" ]; then
     echo "Starting Django development server (runserver) in debug mode with debugpy..."
     echo "Debugger listening on port 5678. You can attach VS Code debugger."
+    # För att få appen att vänta på debugger-klient: lägg till flaggan --wait-for-client efter --listen
     exec python -m debugpy --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8000
 else
     echo "Starting Gunicorn..."

@@ -18,12 +18,12 @@ except Exception as e:
 print('Database is ready!')
 "
 
-
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
 # Start Celery worker with debugpy
 echo "Starting Celery Worker with debugpy..."
-echo "Debugger listening on port 5678. Waiting for debugger to attach..."
-exec python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m celery -A hertz_notifier worker --loglevel=info
+echo "Debugger listening on port 5678. You can attach VS Code debugger."
+# För att få workern att vänta på debugger-klient: lägg till flaggan --wait-for-client efter --listen
+exec python -m debugpy --listen 0.0.0.0:5678 -m celery -A hertz_notifier worker --loglevel=info

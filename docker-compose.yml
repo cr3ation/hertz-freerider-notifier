@@ -3,9 +3,9 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
+        POSTGRES_DB: ${DB_NAME}
+        POSTGRES_USER: ${DB_USER}
+        POSTGRES_PASSWORD: ${DB_PASS}
     volumes:
       - postgres_data:/var/lib/postgresql/data
   redis:
@@ -30,7 +30,7 @@ services:
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
     ports:
       - "8000:8000"
-      - "5678:5678"
+      - "5678:5678"  # Django debugpy
     depends_on:
       - db
       - redis
@@ -39,6 +39,8 @@ services:
     entrypoint: ["/code/entrypoint-worker-debug.sh"]
     volumes:
       - .:/code
+    ports:
+      - "5679:5678"  # Celery worker debugpy (host:container)
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DB_NAME=${DB_NAME}
@@ -52,6 +54,7 @@ services:
       - redis
   beat:
     build: .
+    entrypoint: ["/code/entrypoint-beat.sh"]
     command: celery -A hertz_notifier beat --loglevel=info
     volumes:
       - .:/code

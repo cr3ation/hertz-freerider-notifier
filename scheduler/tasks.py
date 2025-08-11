@@ -70,12 +70,12 @@ def check_hertz():
                 
                 # Create message with appropriate emojis
                 msg = (
-                    f"🚗 {origin} → {destination}\n"
+                    f"🚗 {origin} → {destination}\n\n"
                     f"📅 {pickup_str} - {return_str}\n"
                     f"🚙 {car_model}\n"
                     f"📍 {distance:.0f} km"
                 )
                 
-                ride_url = f"https://www.hertzfreerider.se/transport-routes/{route_id}"
-                send_pushover(msg, ride_url)
+                url = f"https://www.hertzfreerider.se/sv-se/"
+                send_pushover(msg, url)
                 NotifiedRide.objects.create(ride_id=route_id)

@@ -23,7 +23,7 @@ def send_pushover(message, url):
         'user': user_key,
         'message': message,
         'url': url,
-        'title': 'Hertz Freerider Alert',
+        'title': 'Hertz Freerider',
         'priority': 0,
     }
     try:

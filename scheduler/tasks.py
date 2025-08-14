@@ -63,11 +63,17 @@ def check_hertz():
                 # Send notification with additional useful info
                 car_model = route.get('carModel', 'Unknown car')
                 distance = route.get('distance', 0)
+                travel_time = route.get('travelTime', None)
+                # Parse datetimes for DB fields
+                available_at = None
+                latest_return = None
+                available_at = datetime.datetime.fromisoformat(route.get('availableAt', ''))
+                latest_return = datetime.datetime.fromisoformat(route.get('latestReturn', ''))
                 
                 # Format dates in European style with weekday names
-                pickup_str = pickup_date.strftime('%a %d/%m/%Y')  # e.g., "Mon 11/08/2025"
-                return_str = return_date.strftime('%a %d/%m/%Y')  # e.g., "Fri 15/08/2025"
-                
+                pickup_str = pickup_date.strftime('%a %d/%m/%Y')
+                return_str = return_date.strftime('%a %d/%m/%Y')
+
                 # Create message with appropriate emojis
                 msg = (
                     f"🚗 {origin} → {destination}\n\n"
@@ -75,7 +81,16 @@ def check_hertz():
                     f"🚙 {car_model}\n"
                     f"📍 {distance:.0f} km"
                 )
-                
+
                 url = f"https://www.hertzfreerider.se/sv-se/"
                 send_pushover(msg, url)
-                NotifiedRide.objects.create(ride_id=route_id)
+                NotifiedRide.objects.create(
+                    ride_id=route_id,
+                    pickup_location_name=origin,
+                    return_location_name=destination,
+                    distance=distance,
+                    available_at=available_at,
+                    latest_return=latest_return,
+                    travel_time=travel_time,
+                    car_type=car_model
+                )

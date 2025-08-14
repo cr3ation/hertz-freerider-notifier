@@ -15,3 +15,10 @@ class SavedSearch(models.Model):
 class NotifiedRide(models.Model):
     ride_id = models.CharField(max_length=100, unique=True)
     notified_at = models.DateTimeField(auto_now_add=True)
+    pickup_location_name = models.CharField(max_length=255, null=True, blank=True)
+    return_location_name = models.CharField(max_length=255, null=True, blank=True)
+    distance = models.FloatField(null=True, blank=True)
+    available_at = models.DateTimeField(null=True, blank=True)
+    latest_return = models.DateTimeField(null=True, blank=True)
+    travel_time = models.IntegerField(null=True, blank=True)
+    car_type = models.CharField(max_length=255, null=True, blank=True)

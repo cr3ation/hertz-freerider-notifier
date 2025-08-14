@@ -23,7 +23,7 @@ local_settings.py
 # ─────────────────────────────────────────
 #  Static & media artifacts
 # ─────────────────────────────────────────
-staticfiles/
+staticfiles/admin
 media/
 
 # ─────────────────────────────────────────

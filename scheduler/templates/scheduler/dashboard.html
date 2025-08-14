@@ -37,101 +37,247 @@
                 </tbody>
             </table>
         </div>
-                <div class="card p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Live availability</h5>
-                                <span class="badge bg-secondary">{{ matching_routes }}/{{ total_routes }} match your searches</span>
+                <div class="card p-4 mt-4">
+                    <style>
+                        /* Inline (flytta till separat css om det växer) */
+                        .live-table-wrapper {max-height:480px; overflow:auto; border:1px solid #e9ecef; border-radius:.75rem;}
+                        .live-table-wrapper thead th {position:sticky; top:0; background:#f8f9fa; z-index:2; box-shadow:0 1px 0 #dee2e6;}
+                        .live-availability-table tbody tr td {white-space:nowrap;}
+                        .cell-locations {white-space:normal;}
+                        .match-badge {font-weight:600;}
+                        .row-faded {opacity:.55;}
+                        .trip-pill {background:#eef3ff; border-radius:1rem; padding:.15rem .6rem; font-size:.75rem; font-weight:500; display:inline-flex; gap:.35rem; align-items:center;}
+                        .notified-badge {background:#0dcaf0;}
+                        .filter-active {font-weight:600;}
+                        .indicator-dot {width:.55rem; height:.55rem; border-radius:50%; display:inline-block; background:#adb5bd; margin-right:.35rem;}
+                        tr.has-match .indicator-dot {background:#28a745;}
+                        tr.notified-row .indicator-dot {background:#0dcaf0;}
+                    </style>
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h5 class="mb-1">Live availability</h5>
+                            <div class="small text-muted">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
                         </div>
-                        {% if api_error %}
-                            <div class="alert alert-warning">API error: {{ api_error }}</div>
-                        {% endif %}
-                        <div class="table-responsive" style="max-height: 480px; overflow:auto;">
-                            <table class="table table-sm align-middle">
-                                <thead class="table-light">
-                                                        <tr>
-                                                            <th>Origin → Destination</th>
-                                                            <th>Pickup</th>
-                                                            <th>Return</th>
-                                                            <th>Car</th>
-                                                            <th class="text-end">Dist (km)</th>
-                                                            <th class="text-end">Time (h)</th>
-                                                            <th>Matched searches</th>
-                                                            <th>Notified</th>
-                                                        </tr>
-                                </thead>
-                                <tbody>
-                                    {% for r in available_routes %}
-                                                            <tr class="{% if r.matches %}table-success{% endif %}">
-                                                                <td style="min-width:220px;">
-                                                <strong>{{ r.origin }}</strong><br>
-                                                <span class="text-muted">→ {{ r.destination }}</span>
-                                            </td>
-                                              <td>{{ r.available_at_display }}</td>
-                                              <td>{{ r.latest_return_display }}</td>
-                                            <td style="min-width:200px;">{{ r.car_model }}</td>
-                                            <td class="text-end">{% if r.distance %}{{ r.distance|floatformat:0 }}{% endif %}</td>
-                                              <td class="text-end">{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</td>
-                                                                    <td>
-                                                                        {% if r.matches %}
-                                                                            <span class="badge bg-success">{{ r.matches|length }}</span>
-                                                                        {% else %}
-                                                                            <span class="text-muted">-</span>
-                                                                        {% endif %}
-                                                                    </td>
-                                                                    <td>
-                                                                        {% if r.notified %}
-                                                                            <span class="badge bg-info">Yes</span>
-                                                                        {% else %}
-                                                                            <span class="text-muted">No</span>
-                                                                        {% endif %}
-                                                                    </td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr><td colspan="8" class="text-muted">No current availability.</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" style="min-width:180px;" aria-label="Search live availability">
+                            <button id="toggleShowMatches" class="btn btn-outline-success btn-sm" type="button" title="Show only routes matching any search">Only matches</button>
+                            <button id="toggleShowNotified" class="btn btn-outline-info btn-sm" type="button" title="Show only routes already notified">Notified only</button>
+                            <button id="resetFilters" class="btn btn-outline-secondary btn-sm" type="button" title="Reset filters">Reset</button>
+                            <span class="badge bg-secondary" id="liveVisibleCount" title="Visible / total routes">0 / 0</span>
                         </div>
-                        <p class="text-muted mt-2 mb-0"><small>Table refreshes when page reloads. Add auto-refresh later if needed.</small></p>
+                    </div>
+                    {% if api_error %}
+                        <div class="alert alert-warning py-2 mb-3"><strong>API error:</strong> {{ api_error }}</div>
+                    {% endif %}
+                    <div class="live-table-wrapper">
+                        <table class="table table-sm align-middle live-availability-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width:26px;"></th>
+                                    <th>Origin → Destination</th>
+                                    <th>Pickup</th>
+                                    <th>Return</th>
+                                    <th>Car</th>
+                                    <th class="text-end">Trip</th>
+                                    <th class="text-center">Matches</th>
+                                    <th class="text-center">Notified</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in available_routes %}
+                                <tr class="route-row {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
+                                    <td><span class="indicator-dot"></span></td>
+                                    <td class="cell-locations" style="min-width:220px;">
+                                        <strong>{{ r.origin }}</strong><br>
+                                        <span class="text-muted">→ {{ r.destination }}</span>
+                                    </td>
+                                    <td><span class="d-block small fw-semibold">{{ r.available_at_display }}</span></td>
+                                    <td><span class="d-block small text-muted">{{ r.latest_return_display }}</span></td>
+                                    <td style="min-width:200px;">
+                                        <span class="small">{{ r.car_model }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        {% if r.distance or r.travel_hours %}
+                                            <span class="trip-pill">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %}<span class="text-muted">/</span>{% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if r.matches %}
+                                            <span class="badge bg-success match-badge" title="Antal sökningar som matchar">{{ r.matches|length }}</span>
+                                        {% else %}
+                                            <span class="text-muted">–</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if r.notified %}
+                                            <span class="badge notified-badge">Ja</span>
+                                        {% else %}
+                                            <span class="text-muted">Nej</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="8" class="text-muted">No current availability.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                                                <p class="text-muted mb-0 small">Updates on page load (auto-refresh can be added later)</p>
+                                                <button id="scrollTopLive" class="btn btn-light btn-sm">Top</button>
+                    </div>
+                    <script>
+                        (function(){
+                                                    const btnMatches = document.getElementById('toggleShowMatches');
+                                                    const btnNotified = document.getElementById('toggleShowNotified');
+                                                    const btnReset = document.getElementById('resetFilters');
+                                                    const btnTop = document.getElementById('scrollTopLive');
+                                                    const search = document.getElementById('liveSearch');
+                                                    const visibleCount = document.getElementById('liveVisibleCount');
+                                                    const wrapper = document.querySelector('.live-table-wrapper');
+                                                    const rows = () => Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row'));
+                                                    let filterMatches = false, filterNotified = false;
+
+                                                    function applyFilters(){
+                                                        const term = search.value.trim().toLowerCase();
+                                                        let visible = 0;
+                                                        rows().forEach(r => {
+                                                            const isMatch = r.classList.contains('has-match');
+                                                            const isNotified = r.classList.contains('notified-row');
+                                                            let show = true;
+                                                            if(filterMatches) show = show && isMatch;
+                                                            if(filterNotified) show = show && isNotified;
+                                                            if(term){
+                                                                const txt = r.innerText.toLowerCase();
+                                                                show = show && txt.indexOf(term) !== -1;
+                                                            }
+                                                            r.style.display = show ? '' : 'none';
+                                                            if(show) visible++;
+                                                        });
+                                                        const total = rows().length;
+                                                        visibleCount.textContent = visible + ' / ' + total;
+                                                        btnMatches.classList.toggle('filter-active', filterMatches);
+                                                        btnNotified.classList.toggle('filter-active', filterNotified);
+                                                    }
+                                                    btnMatches.addEventListener('click', ()=>{ filterMatches = !filterMatches; applyFilters(); });
+                                                    btnNotified.addEventListener('click', ()=>{ filterNotified = !filterNotified; applyFilters(); });
+                                                    btnReset.addEventListener('click', ()=>{ filterMatches=false; filterNotified=false; search.value=''; applyFilters(); });
+                                                    btnTop.addEventListener('click', ()=>{ wrapper.scrollTo({top:0, behavior:'smooth'}); });
+                                                    search.addEventListener('input', applyFilters);
+                                                    // initial
+                                                    applyFilters();
+                        })();
+                    </script>
                 </div>
                     <div class="card p-4 mt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Notification history (senaste 50)</h5>
-                            <span class="badge bg-info">{{ notified_history|length }}</span>
+                        <style>
+                            .history-wrapper {max-height:340px; overflow:auto; border:1px solid #e9ecef; border-radius:.75rem;}
+                            .history-wrapper thead th {position:sticky; top:0; background:#f8f9fa; z-index:1; box-shadow:0 1px 0 #dee2e6;}
+                            .history-table td, .history-table th {white-space:nowrap;}
+                            .history-table .cell-route {white-space:normal; font-size:.85rem;}
+                            .history-filters .form-control, .history-filters .form-select {height:32px; padding:.25rem .5rem; font-size:.75rem;}
+                            .history-pill {background:#eef3ff; border-radius:1rem; padding:.15rem .55rem; font-size:.7rem; font-weight:500; display:inline-flex; gap:.35rem; align-items:center;}
+                            .badge-count {font-size:.65rem; letter-spacing:.5px;}
+                        </style>
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <h5 class="mb-1">Notification history <small class="text-muted">(latest 50)</small></h5>
+                                <div class="small text-muted">Showing up to the 50 latest notifications</div>
+                            </div>
+                            <div class="history-filters d-flex flex-wrap gap-2 align-items-center">
+                                <input id="histSearch" type="text" class="form-control" placeholder="Search location / car" style="min-width:160px;" aria-label="Search history">
+                                <select id="histTime" class="form-select" aria-label="Filtrera tid">
+                                    <option value="all" selected>All time</option>
+                                    <option value="24h">Last 24h</option>
+                                    <option value="7d">Last 7 days</option>
+                                </select>
+                                <button id="histReset" class="btn btn-outline-secondary btn-sm" type="button">Reset</button>
+                                <span class="badge bg-info badge-count" id="histCount">{{ notified_history|length }}</span>
+                            </div>
                         </div>
-                        <div class="table-responsive" style="max-height:320px; overflow:auto;">
-                            <table class="table table-sm align-middle">
-                                <thead class="table-light">
+                        <div class="history-wrapper">
+                            <table class="table table-sm align-middle history-table mb-0">
+                                <thead>
                                     <tr>
+                                        <th style="width:26px;" title="Index">#</th>
                                         <th>Notified</th>
-                                        <th>Origin → Destination</th>
+                                        <th>Route</th>
                                         <th>Pickup</th>
                                         <th>Return</th>
                                         <th>Car</th>
-                                        <th class="text-end">Dist (km)</th>
-                                        <th class="text-end">Time (h)</th>
+                                        <th class="text-end">Trip</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="histBody">
                                     {% for n in notified_history %}
-                                    <tr>
-                                        <td>{{ n.notified_at|date:"Y-m-d H:i" }}</td>
-                                        <td style="min-width:220px;">
+                                    <tr data-notified="{{ n.notified_at|date:'c' }}">
+                                        <td class="text-muted small">{{ forloop.counter }}</td>
+                                        <td><span class="d-block small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
+                                        <td class="cell-route" style="min-width:200px;">
                                             <strong>{{ n.pickup_location_name }}</strong><br>
                                             <span class="text-muted">→ {{ n.return_location_name }}</span>
                                         </td>
-                                        <td>{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</td>
-                                        <td>{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</td>
-                                        <td style="min-width:200px;">{{ n.car_type }}</td>
-                                        <td class="text-end">{% if n.distance %}{{ n.distance|floatformat:0 }}{% endif %}</td>
-                                        <td class="text-end">{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</td>
+                                        <td><span class="d-block small">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
+                                        <td><span class="d-block small text-muted">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
+                                        <td style="min-width:160px;"><span class="small">{{ n.car_type }}</span></td>
+                                        <td class="text-end">
+                                            {% if n.distance or n.travel_time_hours %}
+                                                <span class="history-pill">{% if n.distance %}{{ n.distance|floatformat:0 }} km{% endif %}{% if n.distance and n.travel_time_hours %}<span class="text-muted">/</span>{% endif %}{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</span>
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                     {% empty %}
-                                    <tr><td colspan="7" class="text-muted">Inga notiser än.</td></tr>
+                    <tr><td colspan="7" class="text-muted">No notifications yet.</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                <p class="text-muted small mb-0">Filtering is local in your browser.</p>
+                <button id="histScrollTop" class="btn btn-light btn-sm" type="button">Top</button>
+                        </div>
+                        <script>
+                            (function(){
+                              const q = document.getElementById('histSearch');
+                              const selTime = document.getElementById('histTime');
+                              const reset = document.getElementById('histReset');
+                              const body = document.getElementById('histBody');
+                              const count = document.getElementById('histCount');
+                              const scrollTopBtn = document.getElementById('histScrollTop');
+                              const wrapper = document.querySelector('.history-wrapper');
+
+                              function apply(){
+                                const term = q.value.trim().toLowerCase();
+                                const now = new Date();
+                                let visible = 0;
+                                const limit = selTime.value;
+                                Array.from(body.querySelectorAll('tr')).forEach(tr => {
+                                  if(!tr.dataset.notified) return; // skip empty row
+                                  const text = tr.innerText.toLowerCase();
+                                  let show = true;
+                                  if(term){
+                                    show = text.indexOf(term) !== -1;
+                                  }
+                                  if(show && limit !== 'all'){
+                                    const notifiedISO = tr.dataset.notified;
+                                    const dt = new Date(notifiedISO);
+                                    if(limit === '24h'){
+                                      show = (now - dt) <= 24*3600*1000;
+                                    } else if(limit === '7d'){
+                                      show = (now - dt) <= 7*24*3600*1000;
+                                    }
+                                  }
+                                  tr.style.display = show ? '' : 'none';
+                                  if(show) visible++;
+                                });
+                                count.textContent = visible;
+                              }
+                              q.addEventListener('input', apply);
+                              selTime.addEventListener('change', apply);
+                              reset.addEventListener('click', ()=>{ q.value=''; selTime.value='all'; apply(); });
+                              scrollTopBtn.addEventListener('click', ()=>{ wrapper.scrollTo({top:0, behavior:'smooth'}); });
+                            })();
+                        </script>
                     </div>
     </div>
 </div>

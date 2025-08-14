@@ -44,10 +44,9 @@ def check_hertz():
                 except (ValueError, IndexError):
                     continue
 
-                # Check if dates are within search criteria
-                if not (search.date_from <= pickup_date <= search.date_to):
-                    continue
-                if not (search.date_from <= return_date <= search.date_to):
+                # Check if date ranges overlap (any overlap between search interval and route interval)
+                # Overlap condition: not (search ends before route starts OR search starts after route ends)
+                if (search.date_to < pickup_date) or (search.date_from > return_date):
                     continue
                     
                 # Check if locations match search criteria

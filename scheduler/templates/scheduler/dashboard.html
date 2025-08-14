@@ -1,4 +1,5 @@
 {% extends 'scheduler/base.html' %}
+{% load scheduler_extras %}
 {% block content %}
 <div class="row">
     <div class="col-md-6 col-lg-5 mb-4">
@@ -17,7 +18,7 @@
             <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>Date From</th><th>Date To</th><th>Origin</th><th>Destination</th><th></th>
+                                                <th>Date From</th><th>Date To</th><th>Origin</th><th>Destination</th><th>Matches now</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -27,6 +28,7 @@
                         <td>{{ s.date_to }}</td>
                         <td>{{ s.origin }}</td>
                         <td>{{ s.destination }}</td>
+                                                <td>{{ search_match_counts|get_item:s.id }}</td>
                         <td><a href="{% url 'delete_search' s.pk %}" class="btn btn-sm btn-danger">Delete</a></td>
                     </tr>
                 {% empty %}
@@ -35,6 +37,102 @@
                 </tbody>
             </table>
         </div>
+                <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Live availability</h5>
+                                <span class="badge bg-secondary">{{ matching_routes }}/{{ total_routes }} match your searches</span>
+                        </div>
+                        {% if api_error %}
+                            <div class="alert alert-warning">API error: {{ api_error }}</div>
+                        {% endif %}
+                        <div class="table-responsive" style="max-height: 480px; overflow:auto;">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                                        <tr>
+                                                            <th>Origin → Destination</th>
+                                                            <th>Pickup</th>
+                                                            <th>Return</th>
+                                                            <th>Car</th>
+                                                            <th class="text-end">Dist (km)</th>
+                                                            <th class="text-end">Time (h)</th>
+                                                            <th>Matched searches</th>
+                                                            <th>Notified</th>
+                                                        </tr>
+                                </thead>
+                                <tbody>
+                                    {% for r in available_routes %}
+                                                            <tr class="{% if r.matches %}table-success{% endif %}">
+                                                                <td style="min-width:220px;">
+                                                <strong>{{ r.origin }}</strong><br>
+                                                <span class="text-muted">→ {{ r.destination }}</span>
+                                            </td>
+                                              <td>{{ r.available_at_display }}</td>
+                                              <td>{{ r.latest_return_display }}</td>
+                                            <td style="min-width:200px;">{{ r.car_model }}</td>
+                                            <td class="text-end">{% if r.distance %}{{ r.distance|floatformat:0 }}{% endif %}</td>
+                                              <td class="text-end">{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</td>
+                                                                    <td>
+                                                                        {% if r.matches %}
+                                                                            <span class="badge bg-success">{{ r.matches|length }}</span>
+                                                                        {% else %}
+                                                                            <span class="text-muted">-</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td>
+                                                                        {% if r.notified %}
+                                                                            <span class="badge bg-info">Yes</span>
+                                                                        {% else %}
+                                                                            <span class="text-muted">No</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="8" class="text-muted">No current availability.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-muted mt-2 mb-0"><small>Table refreshes when page reloads. Add auto-refresh later if needed.</small></p>
+                </div>
+                    <div class="card p-4 mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Notification history (senaste 50)</h5>
+                            <span class="badge bg-info">{{ notified_history|length }}</span>
+                        </div>
+                        <div class="table-responsive" style="max-height:320px; overflow:auto;">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Notified</th>
+                                        <th>Origin → Destination</th>
+                                        <th>Pickup</th>
+                                        <th>Return</th>
+                                        <th>Car</th>
+                                        <th class="text-end">Dist (km)</th>
+                                        <th class="text-end">Time (h)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for n in notified_history %}
+                                    <tr>
+                                        <td>{{ n.notified_at|date:"Y-m-d H:i" }}</td>
+                                        <td style="min-width:220px;">
+                                            <strong>{{ n.pickup_location_name }}</strong><br>
+                                            <span class="text-muted">→ {{ n.return_location_name }}</span>
+                                        </td>
+                                        <td>{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</td>
+                                        <td>{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</td>
+                                        <td style="min-width:200px;">{{ n.car_type }}</td>
+                                        <td class="text-end">{% if n.distance %}{{ n.distance|floatformat:0 }}{% endif %}</td>
+                                        <td class="text-end">{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="7" class="text-muted">Inga notiser än.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
     </div>
 </div>
 {% endblock %}

@@ -1,43 +1,110 @@
 {% extends 'scheduler/base.html' %}
 {% load scheduler_extras %}
 {% block content %}
-<div class="row">
-    <div class="col-md-6 col-lg-5 mb-4">
-        <div class="card p-4">
-            <h5 class="mb-3">Add new alert</h5>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button class="btn btn-primary w-100">Save</button>
-            </form>
-        </div>
+<style>
+    .section-title { font-weight:600; letter-spacing:.5px; display:flex; align-items:center; gap:.6rem; }
+    .section-title svg { width:20px; height:20px; opacity:.85; }
+    .glass-card h5 { font-weight:600; }
+    .form-card form p { margin-bottom: .75rem; }
+    .form-card form label { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; opacity:.8; font-weight:600; }
+    .form-card form input { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.35); color:#fff; }
+    .form-card form input:focus { box-shadow:0 0 0 .15rem rgba(255,255,255,0.35); }
+    .dashboard-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(330px,1fr)); gap:1.75rem; }
+    .subgrid { display:grid; gap:1.75rem; }
+    .table thead th { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; opacity:.75; }
+    .badge.notified-badge { background:linear-gradient(135deg,#00c6ff,#00e3ff); }
+    .match-badge { background:linear-gradient(135deg,#2ecc71,#6ddf99)!important; }
+    .filters-bar input, .filters-bar button { font-size:.75rem; }
+    .filters-bar .btn { padding:.35rem .7rem; }
+    .stats-pill { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.3); border-radius:2rem; padding:.4rem 1rem; font-size:.75rem; font-weight:500; display:inline-flex; align-items:center; gap:.5rem; }
+    .stats-pill strong { font-size:.85rem; }
+    .pill-group { display:flex; flex-wrap:wrap; gap:.5rem; }
+    .divider-soft { height:1px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.35),rgba(255,255,255,0)); margin:1.25rem 0; }
+</style>
+
+<div class="dashboard-grid mb-4">
+    <div class="glass-card p-4 form-card">
+        <h5 class="section-title mb-3">Add new alert</h5>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary w-100 mt-2" type="submit">Save alert</button>
+        </form>
     </div>
-    <div class="col-md-6 col-lg-7">
-        <div class="card p-4">
-            <h5 class="mb-3">Your searches</h5>
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                                                <th>Date From</th><th>Date To</th><th>Origin</th><th>Destination</th><th>Matches now</th><th></th>
+        <div class="glass-card p-4">
+            <h5 class="section-title mb-3">Your searches</h5>
+            <style>
+                .searches-wrapper { max-height: 340px; overflow:auto; border:1px solid rgba(255,255,255,0.25); border-radius:1rem; }
+                .searches-table { margin:0; }
+                .searches-table thead th { position:sticky; top:0; backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%); background:rgba(255,255,255,0.15); border-bottom:1px solid rgba(255,255,255,0.25)!important; font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; }
+                .searches-table tbody tr { transition: background .25s, box-shadow .25s; }
+                .searches-table tbody tr:hover { background:rgba(255,255,255,0.08); box-shadow:0 2px 6px -2px rgba(0,0,0,.4) inset; }
+                .searches-table td, .searches-table th { border-color:rgba(255,255,255,0.15)!important; vertical-align:middle; }
+                .date-pill { background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.3); padding:.25rem .55rem; border-radius:1rem; font-size:.65rem; font-weight:500; display:inline-block; min-width:88px; text-align:center; }
+                .loc-text { font-size:.75rem; font-weight:600; letter-spacing:.3px; }
+                .match-badge-small { background:linear-gradient(135deg,#2ecc71,#6ddf99); font-size:.6rem; letter-spacing:.5px; padding:.35rem .55rem; border-radius:1rem; font-weight:600; }
+                .match-zero { opacity:.45; font-size:.6rem; }
+                .action-col { text-align:right; }
+                .btn-delete { --danger-grad: linear-gradient(135deg,#ff4d4d,#ff9966); background:var(--danger-grad); border:none; color:#fff; font-weight:600; font-size:.6rem; letter-spacing:.5px; padding:.35rem .65rem; border-radius:.65rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.35); }
+                .btn-delete:hover { filter:brightness(1.1); }
+                .empty-row { text-align:center; font-size:.75rem; opacity:.7; }
+                .searches-meta { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-top:.75rem; flex-wrap:wrap; }
+                .searches-meta .small { opacity:.75; }
+                /* Re-added indicator styling to match live availability */
+                .indicator-dot {width:.55rem; height:.55rem; border-radius:50%; display:inline-block; background:#adb5bd; margin-right:.35rem; }
+                tr.has-match .indicator-dot { background:#28a745; }
+                tr.row-faded { opacity:.55; }
+            </style>
+            <div class="searches-wrapper mb-2">
+                <table class="table table-sm align-middle searches-table">
+                    <thead>
+                        <tr>
+                    <th style="width:26px;"></th>
+                            <th style="width:110px;">From</th>
+                            <th style="width:110px;">To</th>
+                            <th style="min-width:110px;">Origin</th>
+                            <th style="min-width:110px;">Destination</th>
+                            <th style="width:90px;" class="text-center">Matches</th>
+                            <th style="width:70px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for s in searches %}
+                        {% with mc=search_match_counts|get_item:s.id %}
+                    <tr class="{% if mc %}has-match{% else %}row-faded{% endif %}">
+                        <td><span class="indicator-dot"></span></td>
+                        <td><span class="date-pill">{{ s.date_from }}</span></td>
+                        <td><span class="date-pill">{{ s.date_to }}</span></td>
+                        <td><span class="loc-text">{{ s.origin }}</span></td>
+                        <td><span class="loc-text">{{ s.destination }}</span></td>
+                        <td class="text-center">
+                            {% if mc %}
+                                <span class="match-badge-small" title="Current matching routes">{{ mc }}</span>
+                            {% else %}
+                                <span class="match-zero">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="action-col">
+                            <a href="{% url 'delete_search' s.pk %}" class="btn-delete" title="Delete search">Delete</a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                {% for s in searches %}
-                    <tr>
-                        <td>{{ s.date_from }}</td>
-                        <td>{{ s.date_to }}</td>
-                        <td>{{ s.origin }}</td>
-                        <td>{{ s.destination }}</td>
-                                                <td>{{ search_match_counts|get_item:s.id }}</td>
-                        <td><a href="{% url 'delete_search' s.pk %}" class="btn btn-sm btn-danger">Delete</a></td>
-                    </tr>
-                {% empty %}
-                    <tr><td colspan="5">No searches yet.</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="empty-row">No searches yet – add one on the left.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="searches-meta">
+                <div class="small">Total searches: {{ searches|length }}</div>
+                <div class="small">Currently matching routes: {{ matching_routes }}</div>
+            </div>
         </div>
-                <div class="card p-4 mt-4">
+</div>
+
+<div class="glass-card p-4 mt-2">
                     <style>
                         /* Inline (flytta till separat css om det växer) */
                         .live-table-wrapper {max-height:480px; overflow:auto; border:1px solid #e9ecef; border-radius:.75rem;}
@@ -53,9 +120,9 @@
                         tr.has-match .indicator-dot {background:#28a745;}
                         tr.notified-row .indicator-dot {background:#0dcaf0;}
                     </style>
-                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 filters-bar">
                         <div>
-                            <h5 class="mb-1">Live availability</h5>
+                <h5 class="mb-1">Live availability</h5>
                             <div class="small text-muted">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
                         </div>
                         <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -103,16 +170,16 @@
                                     </td>
                                     <td class="text-center">
                                         {% if r.matches %}
-                                            <span class="badge bg-success match-badge" title="Antal sökningar som matchar">{{ r.matches|length }}</span>
+                                                    <span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>
                                         {% else %}
                                             <span class="text-muted">–</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
                                         {% if r.notified %}
-                                            <span class="badge notified-badge">Ja</span>
+                                            <span class="badge notified-badge">Yes</span>
                                         {% else %}
-                                            <span class="text-muted">Nej</span>
+                                            <span class="text-muted">No</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -169,7 +236,7 @@
                         })();
                     </script>
                 </div>
-                    <div class="card p-4 mt-4">
+                    <div class="glass-card p-4 mt-4">
                         <style>
                             .history-wrapper {max-height:340px; overflow:auto; border:1px solid #e9ecef; border-radius:.75rem;}
                             .history-wrapper thead th {position:sticky; top:0; background:#f8f9fa; z-index:1; box-shadow:0 1px 0 #dee2e6;}
@@ -186,7 +253,7 @@
                             </div>
                             <div class="history-filters d-flex flex-wrap gap-2 align-items-center">
                                 <input id="histSearch" type="text" class="form-control" placeholder="Search location / car" style="min-width:160px;" aria-label="Search history">
-                                <select id="histTime" class="form-select" aria-label="Filtrera tid">
+                                <select id="histTime" class="form-select" aria-label="Filter time range">
                                     <option value="all" selected>All time</option>
                                     <option value="24h">Last 24h</option>
                                     <option value="7d">Last 7 days</option>

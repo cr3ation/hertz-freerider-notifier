@@ -1,17 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hertz Freerider Notifier</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background: #f9fafb; }
-        .card { border-radius: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,.05);}
-    </style>
+  <style>
+    :root {
+      --bg-blur: 14px;
+      --bg-brightness: 0.75; /* reverted darker */
+      --overlay-center: rgba(255,255,255,0.22);
+      --overlay-edge: rgba(0,0,0,0.45);
+      --glass-border: rgba(255,255,255,0.25);
+      --glass-bg: rgba(255,255,255,0.10);
+    }
+    body { margin:0; min-height:100vh; font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; color:#fff; }
+    .bg-image { position:fixed; inset:0; background:url('{% static "img/background_03.png" %}') center center/cover no-repeat fixed; filter:blur(var(--bg-blur)) brightness(var(--bg-brightness)); transform:scale(1.08); z-index:-3; transition:filter .4s ease; }
+    .bg-overlay { position:fixed; inset:0; background:radial-gradient(circle at 30% 30%, var(--overlay-center), var(--overlay-edge)); z-index:-2; pointer-events:none; transition:background .4s ease; }
+    .navbar { backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); background:rgba(255,255,255,0.12)!important; border-bottom:1px solid rgba(255,255,255,0.25); }
+    .navbar .navbar-brand, .navbar a, .navbar button { color:#fff !important; }
+    .glass-card { background:var(--glass-bg); backdrop-filter:blur(18px) saturate(180%); -webkit-backdrop-filter:blur(18px) saturate(180%); border:1px solid var(--glass-border); border-radius:1.25rem; box-shadow:0 10px 30px -10px rgba(0,0,0,.45); position:relative; overflow:hidden; }
+    .glass-card:before { content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.25) 0%,rgba(255,255,255,0) 60%); pointer-events:none; }
+    .card, .card-header { background:transparent; border:none; }
+    table { color:#fff; }
+    .table thead th { border-bottom-color:rgba(255,255,255,0.25)!important; }
+    .table td, .table th { border-color:rgba(255,255,255,0.15)!important; }
+    a, a:hover { color:#ffd75e; }
+    .btn-primary { background:linear-gradient(135deg,#ffb347,#ffcc33); border:none; color:#222; font-weight:600; }
+    .btn-primary:hover { filter:brightness(1.05); }
+    .btn-outline-secondary { border-color:rgba(255,255,255,0.5); color:#fff; }
+    .btn-outline-secondary:hover { background:rgba(255,255,255,0.15); }
+    main.container { padding-bottom:4rem; }
+  </style>
 </head>
 <body>
-<nav class="navbar navbar-light bg-light mb-4">
+<div class="bg-image"></div>
+<div class="bg-overlay"></div>
+<nav class="navbar navbar-light mb-4">
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h1">Hertz Freerider Notifier</span>
     <span class="d-flex">
@@ -25,7 +51,7 @@
   </div>
 </nav>
 <main class="container">
-    {% block content %}{% endblock %}
+  {% block content %}{% endblock %}
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -10,6 +10,16 @@ A Django & Celery based solution that monitors Hertz Freerider every 2 minutes
 * **Dockerized** – includes PostgreSQL, Redis, Celery worker & beat.
 * **English‑only UI** – regardless of backend locale.
 
+## Screenshots
+
+<p align="center">
+   <a href="docs/img/screenshot_login.png" target="_blank"><img src="docs/img/screenshot_login.png" alt="Login" width="310" style="max-width:100%; border:1px solid #ccc; border-radius:10px; margin:4px;"></a>
+   <a href="docs/img/screenshot_dashboard_01.png" target="_blank"><img src="docs/img/screenshot_dashboard_01.png" alt="Dashboard searches and live availability" width="310" style="max-width:100%; border:1px solid #ccc; border-radius:10px; margin:4px;"></a>
+   <a href="docs/img/screenshot_dashboard_02.png" target="_blank"><img src="docs/img/screenshot_dashboard_02.png" alt="Dashboard notification history" width="310" style="max-width:100%; border:1px solid #ccc; border-radius:10px; margin:4px;"></a>
+</p>
+
+Click any image to view it full size.
+
 ## Prerequisites
 
 - Docker and Docker Compose

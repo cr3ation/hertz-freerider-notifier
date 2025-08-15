@@ -102,3 +102,6 @@ CELERY_BEAT_SCHEDULE = {
 
 PUSHOVER_USER = os.getenv('PUSHOVER_USER')
 PUSHOVER_TOKEN = os.getenv('PUSHOVER_TOKEN')
+
+# Auth flow
+LOGOUT_REDIRECT_URL = '/accounts/login/'

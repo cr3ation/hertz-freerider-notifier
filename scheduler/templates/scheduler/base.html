@@ -15,7 +15,12 @@
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h1">Hertz Freerider Notifier</span>
     <span class="d-flex">
-      <a class="btn btn-outline-secondary" href="{% url 'logout' %}">Logout</a>
+      {% if user.is_authenticated %}
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn btn-outline-secondary" type="submit">Logout</button>
+      </form>
+      {% endif %}
     </span>
   </div>
 </nav>

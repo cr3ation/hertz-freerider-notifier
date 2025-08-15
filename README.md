@@ -190,6 +190,23 @@ To view real-time logs:
 docker compose logs -f worker beat
 ```
 
+### Celery Worker Debugging
+
+The worker entrypoint (`entrypoint-worker.sh`) includes built-in debug support via `debugpy`.
+
+Enable it by starting the stack with `DEBUG=1` in your `.env` (or override at compose runtime). When `DEBUG=1`:
+* The Django app runs with `debugpy` on container port 5678 (host 5678).
+* The Celery worker runs with `debugpy` on container port 5678 but is mapped to a different host port (see `docker-compose.yml`, e.g. `5679:5678`).
+
+Attach from VS Code:
+1. Open the Run and Debug panel.
+2. Use "Python: Remote Attach" (host: `localhost`, port: `5678` for app or `5679` for worker).
+3. Set breakpoints in task code (e.g. `scheduler/tasks.py`).
+
+Optional: To make the worker wait for the debugger before executing code, edit `entrypoint-worker.sh` and add `--wait-for-client` after the `--listen 0.0.0.0:5678` argument.
+
+When you’re done debugging, set `DEBUG=0` and restart the affected services to return to normal (Gunicorn + plain Celery worker) mode.
+
 ## Authentication & Redirects
 
 After a successful login you are redirected to the dashboard (`/`). Visiting the login page while already authenticated will also redirect you to the dashboard (configured via `redirect_authenticated_user=True` and `LOGIN_REDIRECT_URL`).

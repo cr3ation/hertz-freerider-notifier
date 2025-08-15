@@ -42,8 +42,7 @@
                 .searches-table td, .searches-table th { border-color:rgba(255,255,255,0.15)!important; vertical-align:middle; }
                 .date-pill { background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.3); padding:.25rem .55rem; border-radius:1rem; font-size:.65rem; font-weight:500; display:inline-block; min-width:88px; text-align:center; }
                 .loc-text { font-size:.75rem; font-weight:600; letter-spacing:.3px; }
-                .match-badge-small { background:linear-gradient(135deg,#2ecc71,#6ddf99); font-size:.6rem; letter-spacing:.5px; padding:.35rem .55rem; border-radius:1rem; font-weight:600; }
-                .match-zero { opacity:.45; font-size:.6rem; }
+                /* Matches styling now unified with Live availability using .badge.match-badge */
                 .action-col { text-align:right; }
                 .btn-delete { --danger-grad: linear-gradient(135deg,#ff4d4d,#ff9966); background:var(--danger-grad); border:none; color:#fff; font-weight:600; font-size:.6rem; letter-spacing:.5px; padding:.35rem .65rem; border-radius:.65rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.35); }
                 .btn-delete:hover { filter:brightness(1.1); }
@@ -79,9 +78,9 @@
                         <td><span class="loc-text">{{ s.destination }}</span></td>
                         <td class="text-center">
                             {% if mc %}
-                                <span class="match-badge-small" title="Current matching routes">{{ mc }}</span>
+                                <span class="badge match-badge" title="Current matching routes">{{ mc }}</span>
                             {% else %}
-                                <span class="match-zero">0</span>
+                                <span class="text-muted">–</span>
                             {% endif %}
                         </td>
                         <td class="action-col">

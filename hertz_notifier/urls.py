@@ -17,7 +17,7 @@ class PostOnlyLogoutView(LogoutView):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
+    path('accounts/login/', auth_views.LoginView.as_view(redirect_authenticated_user=True), name='login'),
     path('accounts/logout/', PostOnlyLogoutView.as_view(), name='logout'),
     path('', include('scheduler.urls')),
 ]

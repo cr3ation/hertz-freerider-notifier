@@ -105,3 +105,4 @@ PUSHOVER_TOKEN = os.getenv('PUSHOVER_TOKEN')
 
 # Auth flow
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'  # redirect to dashboard after successful login

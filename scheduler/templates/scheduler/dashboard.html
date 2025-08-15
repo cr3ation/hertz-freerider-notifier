@@ -1,26 +1,7 @@
 {% extends 'scheduler/base.html' %}
 {% load scheduler_extras %}
 {% block content %}
-<style>
-    .section-title { font-weight:600; letter-spacing:.5px; display:flex; align-items:center; gap:.6rem; }
-    .section-title svg { width:20px; height:20px; opacity:.85; }
-    .glass-card h5 { font-weight:600; }
-    .form-card form p { margin-bottom: .75rem; }
-    .form-card form label { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; opacity:.8; font-weight:600; }
-    .form-card form input { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.35); color:#fff; }
-    .form-card form input:focus { box-shadow:0 0 0 .15rem rgba(255,255,255,0.35); }
-    .dashboard-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(330px,1fr)); gap:1.75rem; }
-    .subgrid { display:grid; gap:1.75rem; }
-    .table thead th { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; opacity:.75; }
-    .badge.notified-badge { background:linear-gradient(135deg,#00c6ff,#00e3ff); }
-    .match-badge { background:linear-gradient(135deg,#2ecc71,#6ddf99)!important; }
-    .filters-bar input, .filters-bar button { font-size:.75rem; }
-    .filters-bar .btn { padding:.35rem .7rem; }
-    .stats-pill { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.3); border-radius:2rem; padding:.4rem 1rem; font-size:.75rem; font-weight:500; display:inline-flex; align-items:center; gap:.5rem; }
-    .stats-pill strong { font-size:.85rem; }
-    .pill-group { display:flex; flex-wrap:wrap; gap:.5rem; }
-    .divider-soft { height:1px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.35),rgba(255,255,255,0)); margin:1.25rem 0; }
-</style>
+{# Styles moved to scheduler/static/scheduler/css/app.css #}
 
 <div class="dashboard-grid mb-4">
     <div class="glass-card p-4 form-card">
@@ -33,27 +14,7 @@
     </div>
         <div class="glass-card p-4">
             <h5 class="section-title mb-3">Your searches</h5>
-            <style>
-                .searches-wrapper { max-height: 340px; overflow:auto; border:1px solid rgba(255,255,255,0.25); border-radius:1rem; }
-                .searches-table { margin:0; }
-                .searches-table thead th { position:sticky; top:0; backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%); background:rgba(255,255,255,0.15); border-bottom:1px solid rgba(255,255,255,0.25)!important; font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; }
-                .searches-table tbody tr { transition: background .25s, box-shadow .25s; }
-                .searches-table tbody tr:hover { background:rgba(255,255,255,0.08); box-shadow:0 2px 6px -2px rgba(0,0,0,.4) inset; }
-                .searches-table td, .searches-table th { border-color:rgba(255,255,255,0.15)!important; vertical-align:middle; }
-                .date-pill { background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.3); padding:.25rem .55rem; border-radius:1rem; font-size:.65rem; font-weight:500; display:inline-block; min-width:88px; text-align:center; }
-                .loc-text { font-size:.75rem; font-weight:600; letter-spacing:.3px; }
-                /* Matches styling now unified with Live availability using .badge.match-badge */
-                .action-col { text-align:right; }
-                .btn-delete { --danger-grad: linear-gradient(135deg,#ff4d4d,#ff9966); background:var(--danger-grad); border:none; color:#fff; font-weight:600; font-size:.6rem; letter-spacing:.5px; padding:.35rem .65rem; border-radius:.65rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.35); }
-                .btn-delete:hover { filter:brightness(1.1); }
-                .empty-row { text-align:center; font-size:.75rem; opacity:.7; }
-                .searches-meta { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-top:.75rem; flex-wrap:wrap; }
-                .searches-meta .small { opacity:.75; }
-                /* Re-added indicator styling to match live availability */
-                .indicator-dot {width:.55rem; height:.55rem; border-radius:50%; display:inline-block; background:#adb5bd; margin-right:.35rem; }
-                tr.has-match .indicator-dot { background:#28a745; }
-                tr.row-faded { opacity:.55; }
-            </style>
+            {# Searches styles moved to external CSS #}
             <div class="searches-wrapper mb-2">
                 <table class="table table-sm align-middle searches-table">
                     <thead>
@@ -104,25 +65,11 @@
 </div>
 
 <div class="glass-card p-4 mt-2">
-                    <style>
-                        /* Inline (flytta till separat css om det växer) */
-                        .live-table-wrapper {max-height:480px; overflow:auto; border:1px solid #e9ecef; border-radius:.75rem;}
-                        .live-table-wrapper thead th {position:sticky; top:0; background:#f8f9fa; z-index:2; box-shadow:0 1px 0 #dee2e6;}
-                        .live-availability-table tbody tr td {white-space:nowrap;}
-                        .cell-locations {white-space:normal;}
-                        .match-badge {font-weight:600;}
-                        .row-faded {opacity:.55;}
-                        .trip-pill {background:#eef3ff; border-radius:1rem; padding:.15rem .6rem; font-size:.75rem; font-weight:500; display:inline-flex; gap:.35rem; align-items:center;}
-                        .notified-badge {background:#0dcaf0;}
-                        .filter-active {font-weight:600;}
-                        .indicator-dot {width:.55rem; height:.55rem; border-radius:50%; display:inline-block; background:#adb5bd; margin-right:.35rem;}
-                        tr.has-match .indicator-dot {background:#28a745;}
-                        tr.notified-row .indicator-dot {background:#0dcaf0;}
-                    </style>
+                    {# Live availability styles moved to external CSS #}
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 filters-bar">
                         <div>
                 <h5 class="mb-1">Live availability</h5>
-                            <div class="small text-muted">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
+                            <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
                         </div>
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" style="min-width:180px;" aria-label="Search live availability">
@@ -236,19 +183,11 @@
                     </script>
                 </div>
                     <div class="glass-card p-4 mt-4">
-                        <style>
-                            .history-wrapper {max-height:340px; overflow:auto; border:1px solid #e9ecef; border-radius:.75rem;}
-                            .history-wrapper thead th {position:sticky; top:0; background:#f8f9fa; z-index:1; box-shadow:0 1px 0 #dee2e6;}
-                            .history-table td, .history-table th {white-space:nowrap;}
-                            .history-table .cell-route {white-space:normal; font-size:.85rem;}
-                            .history-filters .form-control, .history-filters .form-select {height:32px; padding:.25rem .5rem; font-size:.75rem;}
-                            .history-pill {background:#eef3ff; border-radius:1rem; padding:.15rem .55rem; font-size:.7rem; font-weight:500; display:inline-flex; gap:.35rem; align-items:center;}
-                            .badge-count {font-size:.65rem; letter-spacing:.5px;}
-                        </style>
+                        {# History styles moved to external CSS #}
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                             <div>
                                 <h5 class="mb-1">Notification history <small class="text-muted">(latest 50)</small></h5>
-                                <div class="small text-muted">Showing up to the 50 latest notifications</div>
+                                <div class="meta-line">Showing up to the 50 latest notifications</div>
                             </div>
                             <div class="history-filters d-flex flex-wrap gap-2 align-items-center">
                                 <input id="histSearch" type="text" class="form-control" placeholder="Search location / car" style="min-width:160px;" aria-label="Search history">

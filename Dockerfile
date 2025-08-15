@@ -10,11 +10,9 @@ COPY . /code/
 # Copy and make entrypoint scripts executable
 
 COPY entrypoint.sh /code/entrypoint.sh
-COPY entrypoint-worker-debug.sh /code/entrypoint-worker-debug.sh
 COPY entrypoint-worker.sh /code/entrypoint-worker.sh
-RUN chmod +x /code/entrypoint.sh
-RUN chmod +x /code/entrypoint-worker-debug.sh
-RUN chmod +x /code/entrypoint-worker.sh
+COPY entrypoint-beat.sh /code/entrypoint-beat.sh
+RUN chmod +x /code/entrypoint.sh /code/entrypoint-worker.sh /code/entrypoint-beat.sh
 
 # Set the entrypoint
 ENTRYPOINT ["bash", "/code/entrypoint.sh"]

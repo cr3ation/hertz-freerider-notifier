@@ -54,7 +54,6 @@ services:
   beat:
     build: .
     entrypoint: ["/code/entrypoint-beat.sh"]
-    command: celery -A hertz_notifier beat --loglevel=info
     volumes:
       - .:/code
     environment:

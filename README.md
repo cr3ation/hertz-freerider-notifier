@@ -30,7 +30,7 @@ Click any image to view it full size.
 ### 1. Clone and setup environment
 
 ```bash
-git clone https://github.com/yourfork/hertz-freerider-notifier.git
+git clone https://github.com/cr3ation/hertz-freerider-notifier.git
 cd hertz-freerider-notifier
 ```
 

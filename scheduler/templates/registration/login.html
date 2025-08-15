@@ -1,44 +1,81 @@
 {% extends 'scheduler/base.html' %}
+{% load static %}
+{% load scheduler_extras %}
 
-{% block title %}Logga in{% endblock %}
+{% block title %}Sign in{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Logga in</h4>
+<style>
+    body {
+        /* Bakgrundsbild */
+        background: url('{% static "img/background_03.png" %}') center center / cover no-repeat fixed !important;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    }
+    .login-wrapper { width: 100%; max-width: 400px; padding: 1rem; }
+    .glass-card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(14px) saturate(160%);
+            -webkit-backdrop-filter: blur(14px) saturate(160%);
+            border-radius: 1.25rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,.4);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+    }
+    .glass-card:before {
+            content: "";
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,.25) 0%, rgba(255,255,255,0) 60%);
+            pointer-events: none;
+    }
+    .glass-card h1 { font-size: 1.55rem; font-weight: 600; margin-bottom: .5rem; }
+    .muted { font-size: .85rem; opacity: .75; }
+    .form-control, .form-control:focus { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: #fff; }
+    .form-control:focus { box-shadow: 0 0 0 .2rem rgba(255,255,255,0.25); }
+    label { font-weight: 500; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; }
+    .btn-login { background: linear-gradient(135deg,#ffb347,#ffcc33); border: none; font-weight:600; }
+    .btn-login:hover { filter: brightness(1.05); }
+    .errors { background:#dc3545; color:#fff; border-radius:.5rem; padding:.75rem 1rem; font-size:.8rem; margin-bottom:1rem; }
+    .brand-badge { position:absolute; top:.9rem; right:1rem; font-size:.65rem; letter-spacing:.1em; font-weight:600; opacity:.7; }
+    @media (max-width: 576px) { body { padding: 1.25rem 0; } .glass-card { border-radius: 1rem; } }
+    nav.navbar { display: none; } /* Göm standard-nav på login */
+</style>
+
+<div class="login-wrapper">
+    <div class="glass-card p-4 p-md-5">
+        <div class="brand-badge">HERTZ FREERIDER NOTIFIER</div>
+        <h1>Welcome back</h1>
+        <p class="muted mb-4">Sign in to manage your saved search rules.</p>
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="errors">
+                    <strong>Fel vid inloggning:</strong><br>
+                    {% for field, error_list in form.errors.items %}
+                            {% for error in error_list %}{{ error }}<br>{% endfor %}
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        {% if form.errors %}
-                            <div class="alert alert-danger">
-                                {{ form.errors }}
-                            </div>
-                        {% endif %}
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label">Användarnamn:</label>
-                            {{ form.username }}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.password.id_for_label }}" class="form-label">Lösenord:</label>
-                            {{ form.password }}
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Logga in</button>
-                        </div>
-                        
-                        <input type="hidden" name="next" value="{{ next }}" />
-                    </form>
-                </div>
+            {% endif %}
+
+            <div class="mb-3">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username|add_class:"form-control form-control-lg" }}
             </div>
-        </div>
+            <div class="mb-4">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password|add_class:"form-control form-control-lg" }}
+            </div>
+            <div class="d-grid mb-2">
+            <button class="btn btn-login btn-lg text-dark" type="submit">Sign in</button>
+            </div>
+            <input type="hidden" name="next" value="{{ next }}" />
+        </form>
     </div>
 </div>
 {% endblock %}

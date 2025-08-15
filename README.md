@@ -44,34 +44,21 @@ Edit `.env` and update these important variables:
 docker compose up --build -d
 ```
 
-This will start all services:
-- **app**: Django web application (port 8000)
-- **db**: PostgreSQL database
-- **redis**: Redis for Celery
-- **worker**: Celery worker for background tasks
-- **beat**: Celery beat scheduler
-
-### 4. Start the application
-
-```bash
-docker compose up --build -d
-```
-
 This will automatically:
-- **Build the containers** with all dependencies
-- **Start all services**:
-  - **app**: Django web application (port 8000)
-  - **db**: PostgreSQL database
-  - **redis**: Redis for Celery
-  - **worker**: Celery worker for background tasks
-  - **beat**: Celery beat scheduler
-- **Initialize the database** (create migrations and run them)
-- **Create a default admin user** (username: `admin`, password: `admin123`)
-- **Collect static files**
+* Build images & install dependencies
+* Start services:
+   * app (Django, port 8000)
+   * db (PostgreSQL)
+   * redis (broker / cache)
+   * worker (Celery worker)
+   * beat (Celery beat scheduler – runs every 120s)
+* Run migrations
+* Create a default superuser (if missing)
+* Collect static files (served via WhiteNoise)
 
-### 5. Access the application
+### 4. Access the application
 
-Open <http://localhost:8000> in your browser and log in with:
+Open <http://localhost:8000> — you will be redirected to the login page (`/accounts/login/`) if not authenticated. Log in with:
 - **Username**: `admin`
 - **Password**: `admin123`
 
@@ -133,7 +120,7 @@ docker compose exec app python manage.py createsuperuser
 | Name | Description | Default |
 | ---- | ----------- | ------- |
 | `SECRET_KEY` | Django secret key | `changeme` |
-| `DEBUG` | Debug mode (0 or 1) | `1` |
+| `DEBUG` | Debug mode (0 or 1) | `0` |
 | `DB_NAME` | Database name | `db` |
 | `DB_USER` | Database username | `devuser` |
 | `DB_PASS` | Database password | `changeme` |
@@ -142,13 +129,15 @@ docker compose exec app python manage.py createsuperuser
 | `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `127.0.0.1,localhost` |
 | `PUSHOVER_USER` | Your Pushover user key | - |
 | `PUSHOVER_TOKEN` | Your Pushover app token | - |
+| `DJANGO_SUPERUSER_USERNAME` | Auto-created admin username (if absent) | `admin` |
+| `DJANGO_SUPERUSER_PASSWORD` | Auto-created admin password (if absent) | `admin123` |
 | `CELERY_BROKER_URL` | Redis URL for Celery | `redis://redis:6379/0` |
 
 See `.env.sample` for the complete configuration template.
 
 ## How It Works
 
-1. **Celery Beat** runs every 2 minutes and triggers the monitoring task
+1. **Celery Beat** runs every 2 minutes (120s) and triggers the monitoring task
 2. **Celery Worker** executes the task that:
    - Fetches available rides from Hertz Freerider API
    - Compares them against your saved search criteria
@@ -156,7 +145,7 @@ See `.env.sample` for the complete configuration template.
    - Records notified rides to prevent duplicate alerts
 3. **Django Web App** provides the user interface for managing search rules
 
-### Manual Testing
+### Manual Testing (trigger task immediately)
 
 For testing purposes, you can manually trigger the monitoring task instead of waiting for the 2-minute schedule:
 
@@ -190,3 +179,32 @@ To view real-time logs:
 ```bash
 docker compose logs -f worker beat
 ```
+
+## Authentication & Redirects
+
+After a successful login you are redirected to the dashboard (`/`). Visiting the login page while already authenticated will also redirect you to the dashboard (configured via `redirect_authenticated_user=True` and `LOGIN_REDIRECT_URL`).
+
+## Theming / UI Adjustments
+
+All glass / background styling lives in `scheduler/static/scheduler/css/app.css`.
+
+Useful tweaks:
+* Background brightness: adjust `--bg-brightness` in the `:root` section.
+* Change background image by replacing `background_03.png` under `scheduler/static/img/` (keep filename) or updating the `.bg-image` rule.
+* Filter button styles: selectors `#toggleShowMatches` & `#toggleShowNotified`.
+
+## Security Notes
+
+Before exposing publicly:
+* Change `SECRET_KEY` and admin password.
+* Set `DEBUG=0`.
+* Restrict `ALLOWED_HOSTS`.
+* Consider enabling HTTPS (reverse proxy / load balancer) and stronger password policies.
+
+## Roadmap Ideas
+
+* Auto-refresh live availability (AJAX / HTMX / SSE)
+* Edit saved searches in place
+* Optional dark / light theme toggle
+* Rate limiting & monitoring dashboard
+

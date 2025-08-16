@@ -12,322 +12,335 @@
 
 <!-- Searches (form + list) -->
 <div id="tab-searches" class="dashboard-section" role="tabpanel" aria-labelledby="tabbtn-searches">
-  <div class="dashboard-grid mb-4">
-      <div class="glass-card p-4 form-card">
-          <h5 class="section-title mb-3">Add new alert</h5>
-          <form method="post" novalidate>
-              {% csrf_token %}
-              {{ form.as_p }}
-              <button class="btn btn-primary w-100 mt-2" type="submit">Save alert</button>
-          </form>
-      </div>
-      <div class="glass-card p-4">
-          <h5 class="section-title mb-3">Your searches</h5>
-          <div class="searches-wrapper mb-2">
-              <table class="table table-sm align-middle searches-table">
-                  <thead>
-                      <tr>
-                        <th style="width:26px;"></th>
-                        <th style="width:110px;">From</th>
-                        <th style="width:110px;">To</th>
-                        <th style="min-width:110px;">Origin</th>
-                        <th style="min-width:110px;">Destination</th>
-                        <th style="width:90px;" class="text-center">Matches</th>
-                        <th style="width:70px;"></th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                  {% for s in searches %}
-                      {% with mc=search_match_counts|get_item:s.id %}
-                  <tr class="{% if mc %}has-match{% else %}row-faded{% endif %}">
-                      <td><span class="indicator-dot"></span></td>
-                      <td><span class="date-pill">{{ s.date_from }}</span></td>
-                      <td><span class="date-pill">{{ s.date_to }}</span></td>
-                      <td><span class="loc-text">{{ s.origin }}</span></td>
-                      <td><span class="loc-text">{{ s.destination }}</span></td>
-                      <td class="text-center">
-                          {% if mc %}
-                              <span class="badge match-badge" title="Current matching routes">{{ mc }}</span>
-                          {% else %}
-                              <span class="text-muted">–</span>
-                          {% endif %}
-                      </td>
-                      <td class="action-col">
-                          <a href="{% url 'delete_search' s.pk %}" class="btn-delete" title="Delete search">Delete</a>
-                      </td>
-                  </tr>
-                      {% endwith %}
-                  {% empty %}
-                      <tr>
-                          <td colspan="6" class="empty-row">No searches yet – add one above.</td>
-                      </tr>
-                  {% endfor %}
-                  </tbody>
-              </table>
-          </div>
-          <div class="searches-meta">
-              <div class="small">Total searches: {{ searches|length }}</div>
-              <div class="small">Currently matching routes: {{ matching_routes }}</div>
-          </div>
-      </div>
-  </div>
+    <div class="dashboard-grid mb-4">
+        <div class="glass-card p-4 form-card">
+            <h5 class="section-title mb-3">Add new alert</h5>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-primary w-100 mt-2" type="submit">Save alert</button>
+            </form>
+        </div>
+        <div class="glass-card p-4">
+            <h5 class="section-title mb-3">Your searches</h5>
+            <div class="searches-wrapper mb-2">
+                <table class="table table-sm align-middle searches-table">
+                    <thead>
+                        <tr>
+                            <th style="width:26px;"></th>
+                            <th style="width:110px;">From</th>
+                            <th style="width:110px;">To</th>
+                            <th style="min-width:110px;">Origin</th>
+                            <th style="min-width:110px;">Destination</th>
+                            <th style="width:90px;" class="text-center">Matches</th>
+                            <th style="width:70px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in searches %}
+                            {% with mc=search_match_counts|get_item:s.id %}
+                            <tr class="{% if mc %}has-match{% else %}row-faded{% endif %}">
+                                <td><span class="indicator-dot"></span></td>
+                                <td><span class="date-pill">{{ s.date_from }}</span></td>
+                                <td><span class="date-pill">{{ s.date_to }}</span></td>
+                                <td><span class="loc-text">{{ s.origin }}</span></td>
+                                <td><span class="loc-text">{{ s.destination }}</span></td>
+                                <td class="text-center">
+                                    {% if mc %}
+                                        <span class="badge match-badge" title="Current matching routes">{{ mc }}</span>
+                                    {% else %}
+                                        <span class="text-muted">–</span>
+                                    {% endif %}
+                                </td>
+                                <td class="action-col">
+                                    <a href="{% url 'delete_search' s.pk %}" class="btn-delete" title="Delete search">Delete</a>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="empty-row">No searches yet – add one above.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="searches-meta">
+                <div class="small">Total searches: {{ searches|length }}</div>
+                <div class="small">Currently matching routes: {{ matching_routes }}</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Live availability -->
 <div id="tab-live" class="dashboard-section active" role="tabpanel" aria-labelledby="tabbtn-live">
-  <div class="glass-card p-4 mt-2 mt-md-0">
-                    {# Live availability styles moved to external CSS #}
-            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 filters-bar">
-                        <div>
+    <div class="glass-card p-4 mt-2 mt-md-0">
+        {# Live availability styles moved to external CSS #}
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 filters-bar">
+            <div>
                 <h5 class="mb-1">Live availability</h5>
-                            <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" style="min-width:180px;" aria-label="Search live availability">
-                            <button id="toggleShowMatches" class="btn btn-outline-success btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes that match any of your searches">
-                                <span class="btn-ico" aria-hidden="true">✓</span><span class="btn-text"> Matches</span>
-                            </button>
-                            <button id="toggleShowNotified" class="btn btn-outline-info btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes you've already been notified about">
-                                <span class="btn-ico" aria-hidden="true">🔔</span><span class="btn-text"> Notified</span>
-                            </button>
-                            <button id="resetFilters" class="btn btn-outline-secondary btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Reset search & filters">
-                                <span class="btn-ico" aria-hidden="true">⟳</span><span class="btn-text"> Reset</span>
-                            </button>
-                            <span class="badge bg-secondary" id="liveVisibleCount" title="Visible / total routes">0 / 0</span>
-                        </div>
-                    </div>
-                    {% if api_error %}
-                        <div class="alert alert-warning py-2 mb-3"><strong>API error:</strong> {{ api_error }}</div>
-                    {% endif %}
-                    <div class="live-table-wrapper">
-                        <table class="table table-sm align-middle live-availability-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th style="width:26px;"></th>
-                                    <th>Origin → Destination</th>
-                                    <th>Pickup</th>
-                                    <th>Return</th>
-                                    <th>Car</th>
-                                    <th class="text-end">Trip</th>
-                                    <th class="text-center">Matches</th>
-                                    <th class="text-center">Notified</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for r in available_routes %}
-                                <tr class="route-row {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
-                                    <td><span class="indicator-dot"></span></td>
-                                    <td class="cell-locations" style="min-width:220px;">
-                                        <strong>{{ r.origin }}</strong><br>
-                                        <span class="text-muted">→ {{ r.destination }}</span>
-                                    </td>
-                                    <td><span class="d-block small fw-semibold">{{ r.available_at_display }}</span></td>
-                                    <td><span class="d-block small text-muted">{{ r.latest_return_display }}</span></td>
-                                    <td style="min-width:200px;">
-                                        <span class="small">{{ r.car_model }}</span>
-                                    </td>
-                                    <td class="text-end">
-                                        {% if r.distance or r.travel_hours %}
-                                            <span class="trip-pill">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %}<span class="text-muted">/</span>{% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center">
-                                        {% if r.matches %}
-                                                    <span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>
-                                        {% else %}
-                                            <span class="text-muted">–</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center">
-                                        {% if r.notified %}
-                                            <span class="badge notified-badge">Yes</span>
-                                        {% else %}
-                                            <span class="text-muted">No</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="8" class="text-muted">No current availability.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-                                                <p class="text-muted mb-0 small">Updates on page load (auto-refresh can be added later)</p>
-                                                <button id="scrollTopLive" class="btn btn-light btn-sm">Top</button>
-                    </div>
-                                         <script>
-                                                 (function(){
-                                                        // Safer init: don't break filtering if bootstrap (tooltips) not yet loaded
-                                                        try {
-                                                            if(window.bootstrap && window.bootstrap.Tooltip){
-                                                                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                                                                tooltipTriggerList.forEach(function (el) { new window.bootstrap.Tooltip(el); });
-                                                            }
-                                                        } catch(e){ /* ignore tooltip errors */ }
+                <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" style="min-width:180px;" aria-label="Search live availability">
+                <button id="toggleShowMatches" class="btn btn-outline-success btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes that match any of your searches">
+                    <span class="btn-ico" aria-hidden="true">✓</span><span class="btn-text"> Matches</span>
+                </button>
+                <button id="toggleShowNotified" class="btn btn-outline-info btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes you've already been notified about">
+                    <span class="btn-ico" aria-hidden="true">🔔</span><span class="btn-text"> Notified</span>
+                </button>
+                <button id="resetFilters" class="btn btn-outline-secondary btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Reset search & filters">
+                    <span class="btn-ico" aria-hidden="true">⟳</span><span class="btn-text"> Reset</span>
+                </button>
+                <span class="badge bg-secondary" id="liveVisibleCount" title="Visible / total routes">0 / 0</span>
+            </div>
+        </div>
+        {% if api_error %}
+            <div class="alert alert-warning py-2 mb-3"><strong>API error:</strong> {{ api_error }}</div>
+        {% endif %}
+        <div class="live-table-wrapper">
+            <table class="table table-sm align-middle live-availability-table mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:26px;"></th>
+                        <th>Origin → Destination</th>
+                        <th>Pickup</th>
+                        <th>Return</th>
+                        <th>Car</th>
+                        <th class="text-end">Trip</th>
+                        <th class="text-center">Matches</th>
+                        <th class="text-center">Notified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in available_routes %}
+                        <tr class="route-row {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
+                            <td><span class="indicator-dot"></span></td>
+                            <td class="cell-locations" style="min-width:220px;">
+                                <strong>{{ r.origin }}</strong><br>
+                                <span class="text-muted">→ {{ r.destination }}</span>
+                            </td>
+                            <td><span class="d-block small fw-semibold">{{ r.available_at_display }}</span></td>
+                            <td><span class="d-block small text-muted">{{ r.latest_return_display }}</span></td>
+                            <td style="min-width:200px;">
+                                <span class="small">{{ r.car_model }}</span>
+                            </td>
+                            <td class="text-end">
+                                {% if r.distance or r.travel_hours %}
+                                    <span class="trip-pill">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %}<span class="text-muted">/</span>{% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if r.matches %}
+                                    <span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>
+                                {% else %}
+                                    <span class="text-muted">–</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if r.notified %}
+                                    <span class="badge notified-badge">Yes</span>
+                                {% else %}
+                                    <span class="text-muted">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8" class="text-muted">No current availability.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+            <p class="text-muted mb-0 small">Updates on page load (auto-refresh can be added later)</p>
+            <button id="scrollTopLive" class="btn btn-light btn-sm">Top</button>
+        </div>
+        <script>
+            (function(){
+                // Deferred tooltip initialization so Bootstrap JS (loaded after content) is ready
+                function initTooltips(retries){
+                    const isTouch = ('ontouchstart' in window) || window.matchMedia('(pointer:coarse)').matches;
+                    if(isTouch){
+                        // On mobile/touch: remove tooltip attributes to prevent accidental focus popups
+                        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                            el.removeAttribute('data-bs-toggle');
+                        });
+                        return; // do not init tooltips
+                    }
+                    if(window.bootstrap && window.bootstrap.Tooltip){
+                        document.querySelectorAll('[data-bs-title]')
+                            .forEach(el => {
+                                if(!el._tooltipInstance){
+                                    el._tooltipInstance = new window.bootstrap.Tooltip(el, { delay: { show: 750, hide: 100 }, trigger: 'hover focus' });
+                                }
+                            });
+                    } else if(retries > 0){
+                        setTimeout(()=>initTooltips(retries-1), 150);
+                    }
+                }
+                initTooltips(15); // ~2.25s max
 
-                                                        const btnMatches = document.getElementById('toggleShowMatches');
-                                                        const btnNotified = document.getElementById('toggleShowNotified');
-                                                        const btnReset = document.getElementById('resetFilters');
-                                                        const btnTop = document.getElementById('scrollTopLive');
-                                                        const search = document.getElementById('liveSearch');
-                                                        const visibleCount = document.getElementById('liveVisibleCount');
-                                                        const wrapper = document.querySelector('.live-table-wrapper');
-                                                        const rows = () => Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row'));
-                                                        let filterMatches = false, filterNotified = false;
+                const btnMatches = document.getElementById('toggleShowMatches');
+                const btnNotified = document.getElementById('toggleShowNotified');
+                const btnReset = document.getElementById('resetFilters');
+                const btnTop = document.getElementById('scrollTopLive');
+                const search = document.getElementById('liveSearch');
+                const visibleCount = document.getElementById('liveVisibleCount');
+                const wrapper = document.querySelector('.live-table-wrapper');
+                const rows = () => Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row'));
+                let filterMatches = false, filterNotified = false;
 
-                                                        function applyFilters(){
-                                                                const term = search.value.trim().toLowerCase();
-                                                                let visible = 0;
-                                                                rows().forEach(r => {
-                                                                        const isMatch = r.classList.contains('has-match');
-                                                                        const isNotified = r.classList.contains('notified-row');
-                                                                        let show = true;
-                                                                        if(filterMatches) show = show && isMatch;
-                                                                        if(filterNotified) show = show && isNotified;
-                                                                        if(term){
-                                                                                const txt = r.innerText.toLowerCase();
-                                                                                show = show && txt.indexOf(term) !== -1;
-                                                                        }
-                                                                        r.style.display = show ? '' : 'none';
-                                                                        if(show) visible++;
-                                                                });
-                                                                const total = rows().length;
-                                                                visibleCount.textContent = visible + ' / ' + total;
-                                                                btnMatches.classList.toggle('filter-active', filterMatches);
-                                                                btnNotified.classList.toggle('filter-active', filterNotified);
-                                                        }
-                                                        btnMatches.addEventListener('click', ()=>{ filterMatches = !filterMatches; applyFilters(); });
-                                                        btnNotified.addEventListener('click', ()=>{ filterNotified = !filterNotified; applyFilters(); });
-                                                        btnReset.addEventListener('click', ()=>{ filterMatches=false; filterNotified=false; search.value=''; applyFilters(); });
-                                                        btnTop.addEventListener('click', ()=>{ wrapper.scrollTo({top:0, behavior:'smooth'}); });
-                                                        search.addEventListener('input', applyFilters);
-                                                        // initial
-                                                        applyFilters();
-                                                 })();
-                                         </script>
-                </div>
+                function applyFilters(){
+                    const term = search.value.trim().toLowerCase();
+                    let visible = 0;
+                    rows().forEach(r => {
+                        const isMatch = r.classList.contains('has-match');
+                        const isNotified = r.classList.contains('notified-row');
+                        let show = true;
+                        if(filterMatches) show = show && isMatch;
+                        if(filterNotified) show = show && isNotified;
+                        if(term){
+                            const txt = r.innerText.toLowerCase();
+                            show = show && txt.indexOf(term) !== -1;
+                        }
+                        r.style.display = show ? '' : 'none';
+                        if(show) visible++;
+                    });
+                    const total = rows().length;
+                    visibleCount.textContent = visible + ' / ' + total;
+                    btnMatches.classList.toggle('filter-active', filterMatches);
+                    btnNotified.classList.toggle('filter-active', filterNotified);
+                }
+                btnMatches.addEventListener('click', ()=>{ filterMatches = !filterMatches; applyFilters(); });
+                btnNotified.addEventListener('click', ()=>{ filterNotified = !filterNotified; applyFilters(); });
+                btnReset.addEventListener('click', ()=>{ filterMatches=false; filterNotified=false; search.value=''; applyFilters(); });
+                btnTop.addEventListener('click', ()=>{ wrapper.scrollTo({top:0, behavior:'smooth'}); });
+                search.addEventListener('input', applyFilters);
+                applyFilters(); // initial
+            })();
+        </script>
+    </div>
 </div>
 <!-- Notification history -->
 <div id="tab-notifications" class="dashboard-section" role="tabpanel" aria-labelledby="tabbtn-notifications">
-  <div class="glass-card p-4 mt-4 mt-md-3">
-                        {# History styles moved to external CSS #}
-                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
-                            <div>
-                                <h5 class="mb-1">Notification history <small class="text-muted">(latest 50)</small></h5>
-                                <div class="meta-line">Showing up to the 50 latest notifications</div>
-                            </div>
-                            <div class="history-filters d-flex flex-wrap gap-2 align-items-center">
-                                <input id="histSearch" type="text" class="form-control" placeholder="Search location / car" style="min-width:160px;" aria-label="Search history">
-                                <select id="histTime" class="form-select" aria-label="Filter time range">
-                                    <option value="all" selected>All time</option>
-                                    <option value="24h">Last 24h</option>
-                                    <option value="7d">Last 7 days</option>
-                                </select>
-                                <button id="histReset" class="btn btn-outline-secondary btn-sm filter-btn" type="button">Reset</button>
-                                <span class="badge bg-info badge-count" id="histCount">{{ notified_history|length }}</span>
-                            </div>
-                        </div>
-                        <div class="history-wrapper">
-                            <table class="table table-sm align-middle history-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th style="width:26px;" title="Index">#</th>
-                                        <th>Notified</th>
-                                        <th>Route</th>
-                                        <th>Pickup</th>
-                                        <th>Return</th>
-                                        <th>Car</th>
-                                        <th class="text-end">Trip</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="histBody">
-                                    {% for n in notified_history %}
-                                    <tr class="route-row row-faded" data-notified="{{ n.notified_at|date:'c' }}">
-                                        <td class="text-muted small">{{ forloop.counter }}</td>
-                                        <td><span class="d-block small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
-                                        <td class="cell-route" style="min-width:200px;">
-                                            <strong>{{ n.pickup_location_name }}</strong><br>
-                                            <span class="text-muted">→ {{ n.return_location_name }}</span>
-                                        </td>
-                                        <td><span class="d-block small">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
-                                        <td><span class="d-block small text-muted">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
-                                        <td style="min-width:160px;"><span class="small">{{ n.car_type }}</span></td>
-                                        <td class="text-end">
-                                            {% if n.distance or n.travel_time_hours %}
-                                                <span class="history-pill">{% if n.distance %}{{ n.distance|floatformat:0 }} km{% endif %}{% if n.distance and n.travel_time_hours %}<span class="text-muted">/</span>{% endif %}{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                    <tr><td colspan="7" class="text-muted">No notifications yet.</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-                <p class="text-muted small mb-0">Filtering is local in your browser.</p>
-                <button id="histScrollTop" class="btn btn-light btn-sm" type="button">Top</button>
-                        </div>
-                        <script>
-                            (function(){
-                              const q = document.getElementById('histSearch');
-                              const selTime = document.getElementById('histTime');
-                              const reset = document.getElementById('histReset');
-                              const body = document.getElementById('histBody');
-                              const count = document.getElementById('histCount');
-                              const scrollTopBtn = document.getElementById('histScrollTop');
-                              const wrapper = document.querySelector('.history-wrapper');
+    <div class="glass-card p-4 mt-4 mt-md-3">
+        {# History styles moved to external CSS #}
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+            <div>
+                <h5 class="mb-1">Notification history</h5>
+                <div class="meta-line">Showing up to the 50 latest notifications</div>
+            </div>
+            <div class="history-filters d-flex flex-wrap gap-2 align-items-center">
+                <input id="histSearch" type="text" class="form-control" placeholder="Search location / car" style="min-width:160px;" aria-label="Search history">
+                <select id="histTime" class="form-select" aria-label="Filter time range">
+                    <option value="all" selected>All time</option>
+                    <option value="24h">Last 24h</option>
+                    <option value="7d">Last 7 days</option>
+                </select>
+                <button id="histReset" class="btn btn-outline-secondary btn-sm filter-btn" type="button">Reset</button>
+                <span class="badge bg-info badge-count" id="histCount">{{ notified_history|length }}</span>
+            </div>
+        </div>
+        <div class="history-wrapper">
+            <table class="table table-sm align-middle history-table mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:26px;" title="Index">#</th>
+                        <th>Notified</th>
+                        <th>Route</th>
+                        <th>Pickup</th>
+                        <th>Return</th>
+                        <th>Car</th>
+                        <th class="text-end">Trip</th>
+                    </tr>
+                </thead>
+                <tbody id="histBody">
+                    {% for n in notified_history %}
+                        <tr class="route-row row-faded" data-notified="{{ n.notified_at|date:'c' }}">
+                            <td class="text-muted small">{{ forloop.counter }}</td>
+                            <td><span class="d-block small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
+                            <td class="cell-route" style="min-width:200px;">
+                                <strong>{{ n.pickup_location_name }}</strong><br>
+                                <span class="text-muted">→ {{ n.return_location_name }}</span>
+                            </td>
+                            <td><span class="d-block small">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
+                            <td><span class="d-block small text-muted">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
+                            <td style="min-width:160px;"><span class="small">{{ n.car_type }}</span></td>
+                            <td class="text-end">
+                                {% if n.distance or n.travel_time_hours %}
+                                    <span class="history-pill">{% if n.distance %}{{ n.distance|floatformat:0 }} km{% endif %}{% if n.distance and n.travel_time_hours %}<span class="text-muted">/</span>{% endif %}{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="text-muted">No notifications yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+            <p class="text-muted small mb-0">Filtering is local in your browser.</p>
+            <button id="histScrollTop" class="btn btn-light btn-sm" type="button">Top</button>
+        </div>
+        <script>
+            (function(){
+                const q = document.getElementById('histSearch');
+                const selTime = document.getElementById('histTime');
+                const reset = document.getElementById('histReset');
+                const body = document.getElementById('histBody');
+                const count = document.getElementById('histCount');
+                const scrollTopBtn = document.getElementById('histScrollTop');
+                const wrapper = document.querySelector('.history-wrapper');
 
-                              function apply(){
-                                const term = q.value.trim().toLowerCase();
-                                const now = new Date();
-                                let visible = 0;
-                                const limit = selTime.value;
-                                Array.from(body.querySelectorAll('tr')).forEach(tr => {
-                                  if(!tr.dataset.notified) return; // skip empty row
-                                  const text = tr.innerText.toLowerCase();
-                                  let show = true;
-                                  if(term){
-                                    show = text.indexOf(term) !== -1;
-                                  }
-                                  if(show && limit !== 'all'){
-                                    const notifiedISO = tr.dataset.notified;
-                                    const dt = new Date(notifiedISO);
-                                    if(limit === '24h'){
-                                      show = (now - dt) <= 24*3600*1000;
-                                    } else if(limit === '7d'){
-                                      show = (now - dt) <= 7*24*3600*1000;
-                                    }
-                                  }
-                                  tr.style.display = show ? '' : 'none';
-                                  if(show) visible++;
-                                });
-                                count.textContent = visible;
-                              }
-                              q.addEventListener('input', apply);
-                              selTime.addEventListener('change', apply);
-                              reset.addEventListener('click', ()=>{ q.value=''; selTime.value='all'; apply(); });
-                              scrollTopBtn.addEventListener('click', ()=>{ wrapper.scrollTo({top:0, behavior:'smooth'}); });
-                            })();
-                        </script>
-                    </div>
-  </div>
+                function apply(){
+                    const term = q.value.trim().toLowerCase();
+                    const now = new Date();
+                    let visible = 0;
+                    const limit = selTime.value;
+                    Array.from(body.querySelectorAll('tr')).forEach(tr => {
+                        if(!tr.dataset.notified) return; // skip empty row
+                        const text = tr.innerText.toLowerCase();
+                        let show = true;
+                        if(term){ show = text.indexOf(term) !== -1; }
+                        if(show && limit !== 'all'){
+                            const dt = new Date(tr.dataset.notified);
+                            if(limit === '24h'){
+                                show = (now - dt) <= 24*3600*1000;
+                            } else if(limit === '7d'){
+                                show = (now - dt) <= 7*24*3600*1000;
+                            }
+                        }
+                        tr.style.display = show ? '' : 'none';
+                        if(show) visible++;
+                    });
+                    count.textContent = visible;
+                }
+                q.addEventListener('input', apply);
+                selTime.addEventListener('change', apply);
+                reset.addEventListener('click', ()=>{ q.value=''; selTime.value='all'; apply(); });
+                scrollTopBtn.addEventListener('click', ()=>{ wrapper.scrollTo({top:0, behavior:'smooth'}); });
+            })();
+        </script>
+    </div>
 </div>
 
 <!-- Mobile tab switching script -->
 <script>
-  (function(){
-    const mq = window.matchMedia('(max-width: 768px)');
-    const buttons = document.querySelectorAll('.mobile-tabs .nav-link');
-    const sections = document.querySelectorAll('.dashboard-section');
-    function activate(id){
-      sections.forEach(s=>{ s.classList.toggle('active', s.id === id); });
-      buttons.forEach(b=>{ const on = b.dataset.target === id; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true':'false'); });
-    }
-    buttons.forEach(btn=> btn.addEventListener('click', ()=> activate(btn.dataset.target)));
-    // If on mobile ensure only active shown (default live)
-    if(mq.matches){ activate('tab-live'); }
-  })();
+    (function(){
+        const mq = window.matchMedia('(max-width: 768px)');
+        const buttons = document.querySelectorAll('.mobile-tabs .nav-link');
+        const sections = document.querySelectorAll('.dashboard-section');
+        function activate(id){
+            sections.forEach(s => s.classList.toggle('active', s.id === id));
+            buttons.forEach(b => {
+                const on = b.dataset.target === id;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+        }
+        buttons.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.target)));
+        if(mq.matches){ activate('tab-live'); }
+    })();
 </script>
 {% endblock %}

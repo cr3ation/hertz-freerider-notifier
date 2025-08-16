@@ -28,8 +28,8 @@ services:
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
     ports:
-      - "8000:8000"
-      - "5678:5678"  # Django debugpy
+      - "${APP_PORT:-8000}:8000"
+      - "${APP_DEBUGPY_PORT:-5678}:5678"
     depends_on:
       - db
       - redis

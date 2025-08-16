@@ -47,6 +47,7 @@ Edit `.env` and update these important variables:
 - `PUSHOVER_TOKEN` - Your Pushover app token  
 - `SECRET_KEY` - A secure random string for Django
 - `DB_PASS` - A secure password for the database
+ - (Optional) `APP_PORT` / `APP_DEBUGPY_PORT` if the defaults 8000 / 5678 clash on your system
 
 ### 3. Start the application
 
@@ -57,7 +58,7 @@ docker compose up --build -d
 This will automatically:
 * Build images & install dependencies
 * Start services:
-   * app (Django, port 8000)
+   * app (Django, port `$APP_PORT` – defaults to 8000)
    * db (PostgreSQL)
    * redis (broker / cache)
    * worker (Celery worker)
@@ -131,6 +132,8 @@ docker compose exec app python manage.py createsuperuser
 | ---- | ----------- | ------- |
 | `SECRET_KEY` | Django secret key | `changeme` |
 | `DEBUG` | Debug mode (0 or 1) | `0` |
+| `APP_PORT` | Host port exposed for Django web app | `8000` |
+| `APP_DEBUGPY_PORT` | Host port for Django debugpy (when `DEBUG=1`) | `5678` |
 | `DB_NAME` | Database name | `db` |
 | `DB_USER` | Database username | `devuser` |
 | `DB_PASS` | Database password | `changeme` |

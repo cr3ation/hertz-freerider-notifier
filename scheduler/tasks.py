@@ -73,16 +73,17 @@ def check_hertz():
                 pickup_str = pickup_date.strftime('%a %d/%m/%Y')
                 return_str = return_date.strftime('%a %d/%m/%Y')
 
-                # Create message with appropriate emojis
+                # HTML message (limited tags supported by Pushover when html=1)
+                # Provide a direct clickable link.
                 msg = (
-                    f"🚗 {origin} → {destination}\n\n"
-                    f"📅 {pickup_str} - {return_str}\n"
-                    f"🚙 {car_model}\n"
-                    f"📍 {distance:.0f} km"
+                    f"🚗 <b>{origin}</b> → <b>{destination}</b><br><br>"
+                    f"📅 {pickup_str} - {return_str}<br>"
+                    f"🚙 {car_model}<br>"
+                    f"📍 {distance:.0f} km<br><br>"
+                    f"Book ride <a href=\"https://www.hertzfreerider.se/sv-se/\">here</a>"
                 )
 
-                url = f"https://www.hertzfreerider.se/sv-se/"
-                send_pushover(msg, url)
+                send_pushover(msg, html=True)
                 NotifiedRide.objects.create(
                     ride_id=route_id,
                     pickup_location_name=origin,

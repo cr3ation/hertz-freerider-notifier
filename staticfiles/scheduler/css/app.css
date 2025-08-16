@@ -108,6 +108,8 @@ tr.row-faded { opacity:.55; }
   font-size:.65rem !important;
   padding:.45rem .75rem !important;
 }
+.filter-btn .btn-ico { margin-right:.35rem; font-size:.8rem; line-height:1; display:inline-block; transform:translateY(-1px); }
+.filter-btn .btn-text { letter-spacing:.35px; }
 
 /* Filter buttons (improved contrast for Only matches) */
 #toggleShowMatches.filter-btn {

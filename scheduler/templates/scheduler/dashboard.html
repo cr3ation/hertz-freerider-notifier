@@ -73,9 +73,15 @@
                         </div>
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" style="min-width:180px;" aria-label="Search live availability">
-                            <button id="toggleShowMatches" class="btn btn-outline-success btn-sm filter-btn" type="button" title="Show only routes matching any search">Only matches</button>
-                            <button id="toggleShowNotified" class="btn btn-outline-info btn-sm filter-btn" type="button" title="Show only routes already notified">Notified only</button>
-                            <button id="resetFilters" class="btn btn-outline-secondary btn-sm filter-btn" type="button" title="Reset filters">Reset</button>
+                            <button id="toggleShowMatches" class="btn btn-outline-success btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes that match any of your searches">
+                                <span class="btn-ico" aria-hidden="true">✓</span><span class="btn-text"> Matches</span>
+                            </button>
+                            <button id="toggleShowNotified" class="btn btn-outline-info btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes you've already been notified about">
+                                <span class="btn-ico" aria-hidden="true">🔔</span><span class="btn-text"> Notified</span>
+                            </button>
+                            <button id="resetFilters" class="btn btn-outline-secondary btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Reset search & filters">
+                                <span class="btn-ico" aria-hidden="true">⟳</span><span class="btn-text"> Reset</span>
+                            </button>
                             <span class="badge bg-secondary" id="liveVisibleCount" title="Visible / total routes">0 / 0</span>
                         </div>
                     </div>
@@ -141,6 +147,9 @@
                     </div>
                     <script>
                         (function(){
+                                                    // Initialize Bootstrap tooltips for filter buttons
+                                                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                                    tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });
                                                     const btnMatches = document.getElementById('toggleShowMatches');
                                                     const btnNotified = document.getElementById('toggleShowNotified');
                                                     const btnReset = document.getElementById('resetFilters');
@@ -215,7 +224,7 @@
                                 </thead>
                                 <tbody id="histBody">
                                     {% for n in notified_history %}
-                                    <tr data-notified="{{ n.notified_at|date:'c' }}">
+                                    <tr class="route-row row-faded" data-notified="{{ n.notified_at|date:'c' }}">
                                         <td class="text-muted small">{{ forloop.counter }}</td>
                                         <td><span class="d-block small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
                                         <td class="cell-route" style="min-width:200px;">

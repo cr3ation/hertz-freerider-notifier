@@ -172,7 +172,8 @@
                         document.querySelectorAll('[data-bs-title]')
                             .forEach(el => {
                                 if(!el._tooltipInstance){
-                                    el._tooltipInstance = new window.bootstrap.Tooltip(el, { delay: { show: 750, hide: 100 }, trigger: 'hover focus' });
+                                    // Endast hover-trigger så att klick (focus) inte visar tooltip på desktop
+                                    el._tooltipInstance = new window.bootstrap.Tooltip(el, { delay: { show: 1500, hide: 100 }, trigger: 'hover' });
                                 }
                             });
                     } else if(retries > 0){

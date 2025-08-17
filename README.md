@@ -147,7 +147,7 @@ docker compose exec app python manage.py createsuperuser
 | `DB_HOST` | Database host | `db` |
 | `DB_PORT` | Database port | `5432` |
 | `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `127.0.0.1,localhost` |
-| `CSRF_TRUSTED_ORIGINS` | Comma-separated list of trusted origins (include scheme) for CSRF protection | (empty) |
+| `CSRF_TRUSTED_ORIGINS` | Comma-separated list of trusted origins (include scheme) for CSRF protection | - |
 | `PUSHOVER_USER` | Your Pushover user key | - |
 | `PUSHOVER_TOKEN` | Your Pushover app token | - |
 | `DJANGO_SUPERUSER_USERNAME` | Auto-created admin username (if absent) | `admin` |

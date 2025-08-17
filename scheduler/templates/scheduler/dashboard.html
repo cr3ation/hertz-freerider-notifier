@@ -127,7 +127,6 @@
             <table class="table table-sm align-middle live-availability-table mb-0">
                 <thead>
                     <tr>
-                        <th style="width:26px;"></th>
                         <th>Origin → Destination</th>
                         <th>Pickup</th>
                         <th>Return</th>
@@ -140,7 +139,6 @@
                 <tbody>
                     {% for r in available_routes %}
                         <tr class="route-row {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
-                            <td><span class="indicator-dot"></span></td>
                             <td class="cell-locations" style="min-width:220px;">
                                 <strong>{{ r.origin }}</strong><br>
                                 <span class="text-muted">→ {{ r.destination }}</span>
@@ -171,7 +169,7 @@
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="8" class="text-muted">No current availability.</td></tr>
+                        <tr><td colspan="7" class="text-muted">No current availability.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -182,7 +180,7 @@
             <div class="route-row route-card glass-card {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
                 <div class="rc-head d-flex justify-content-between align-items-start">
                     <div class="rc-locs">
-                        <div class="rc-route"><span class="indicator-dot"></span><strong>{{ r.origin }}</strong><span class="arrow">→</span><span class="dest">{{ r.destination }}</span></div>
+                        <div class="rc-route"><strong>{{ r.origin }}</strong><span class="arrow">→</span><span class="dest">{{ r.destination }}</span></div>
                     </div>
                                         <div class="rc-badges text-end">
                                                 {% if r.distance or r.travel_hours %}

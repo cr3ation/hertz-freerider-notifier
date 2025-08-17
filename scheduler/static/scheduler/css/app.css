@@ -231,7 +231,6 @@ body.auth-page nav.navbar { display:none; }
   .history-card .hc-head { align-items:flex-start; }
   .history-card .hc-trip { opacity:.85; }
   .history-card .hc-route { margin-top:.35rem; }
-  .mobile-card-list .indicator-dot { margin-right:.4rem; }
   .btn-delete-sm { padding:.25rem .55rem; font-size:.55rem; }
   /* Strengthen text contrast inside mobile cards */
   /* Explicit dark text colors to match table styling */

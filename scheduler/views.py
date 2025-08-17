@@ -1,3 +1,20 @@
+"""View layer for the Hertz freerider notifier dashboard.
+
+Contains two views:
+    dashboard     – main page showing: user searches (CRUD), live availability, notification history.
+    delete_search – simple deletion endpoint (redirects back to dashboard).
+
+The dashboard view performs three main tasks each request:
+1. Build current live availability by calling the external API helper `fetch_routes()` and
+   annotating every route with which user searches it matches.
+2. Handle create/update (edit) of a SavedSearch using a single form (POST with optional hidden editing_id).
+3. Produce a lightweight history list of recent notifications (capped at 50) for display.
+
+Mobile/desktop tab selection is driven by a query parameter `?tab=` and the template uses the
+`active_tab` context var to choose which tab is active at load. When editing a search we force
+`active_tab = 'searches'` so the user sees the pre‑filled form immediately.
+"""
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
@@ -8,17 +25,20 @@ from datetime import datetime
 
 @login_required
 def dashboard(request):
+    # All searches for the current user (used both for listing & matching live routes)
     searches = SavedSearch.objects.filter(owner=request.user)
-    # Prepare data structures for live availability
-    available_routes = []
-    search_match_counts = {s.id: 0 for s in searches}
-    api_error = None
+
+    # Containers for live availability compilation
+    available_routes = []               # list of dicts describing each current route
+    search_match_counts = {s.id: 0 for s in searches}  # how many live routes match each search
+    api_error = None                    # capture API errors to show a warning banner
     try:
         raw_data = fetch_routes()
     except Exception as e:
         raw_data = []
         api_error = str(e)
 
+    # Parse API payload only if we got a list (graceful handling of errors / unexpected format)
     if isinstance(raw_data, list):
         for location_pair in raw_data:
             for route in location_pair.get('routes', []):
@@ -40,8 +60,10 @@ def dashboard(request):
                 car_model = route.get('carModel')
                 distance = route.get('distance')
                 travel_time = route.get('travelTime')  # minutes
-                matches = []
-                # Determine which of the user's searches match this route
+                matches = []  # IDs of SavedSearch objects that match this route
+                # Determine which of the user's searches match this route based on:
+                #   * overlapping pickup/return date range
+                #   * wildcard origin & destination text match
                 for s in searches:
                     if pickup_date is None or return_date is None:
                         continue
@@ -55,7 +77,7 @@ def dashboard(request):
                     matches.append(s.id)
                     search_match_counts[s.id] += 1
 
-                # Only include currently available routes (optionally could filter by expiry etc.)
+                # Collect normalized / display friendly values for template consumption
                 available_routes.append({
                     'route_id': route_id,
                     'origin': origin,
@@ -71,9 +93,10 @@ def dashboard(request):
                     'matches': matches,
                     'notified': NotifiedRide.objects.filter(ride_id=route_id).exists(),
                 })
-    editing_id = None
-    active_tab = request.GET.get('tab') or 'live'
+    editing_id = None                            # holds the ID of a search currently being edited
+    active_tab = request.GET.get('tab') or 'live' # which UI tab should be active on initial render
     if request.method == 'POST':
+        # Distinguish between create and update: hidden field 'editing_id' present => update
         editing_id = request.POST.get('editing_id') or None
         if editing_id:
             search_obj = get_object_or_404(SavedSearch, pk=editing_id, owner=request.user)
@@ -82,9 +105,11 @@ def dashboard(request):
         else:
             form = SavedSearchForm(request.POST)
         if form.is_valid():
+            # Persist search (owner always enforced server-side for safety)
             saved = form.save(commit=False)
             saved.owner = request.user
             saved.save()
+            # Redirect using GET to avoid form resubmission on refresh and focus Searches tab
             return redirect(f"{reverse('dashboard')}?tab=searches")
     else:
         edit_param = request.GET.get('edit')
@@ -95,7 +120,7 @@ def dashboard(request):
             active_tab = 'searches'
         else:
             form = SavedSearchForm()
-    # Recent notification history (latest first)
+    # Build recent notification history (latest first, capped to 50) with lightweight dicts
     notified_history_raw = list(NotifiedRide.objects.order_by('-notified_at')[:50])
     notified_history = []
     for n in notified_history_raw:
@@ -110,6 +135,7 @@ def dashboard(request):
             'distance': n.distance,
             'travel_time_hours': hours,
         })
+    # Aggregate context for template
     return render(request, 'scheduler/dashboard.html', {
         'form': form,
         'searches': searches,
@@ -119,12 +145,16 @@ def dashboard(request):
         'matching_routes': sum(1 for r in available_routes if r['matches']),
         'api_error': api_error,
         'notified_history': notified_history,
-    'editing_id': editing_id,
-    'active_tab': active_tab,
+        'editing_id': editing_id,
+        'active_tab': active_tab,
     })
 
-@login_required
 def delete_search(request, pk):
+    """Delete a user's saved search and return to dashboard.
+
+    Using GET (link) for simplicity; could be converted to POST for stricter semantics
+    if desired (then guard with csrf + method check).
+    """
     search = get_object_or_404(SavedSearch, pk=pk, owner=request.user)
     search.delete()
     return redirect('dashboard')

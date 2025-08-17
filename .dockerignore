@@ -1,0 +1,38 @@
+###############################
+# Docker build context pruning
+###############################
+
+.git
+.gitignore
+__pycache__/
+*.py[cod]
+*.pyo
+*.pytest_cache
+*.log
+
+# Local env files (only keep the sample)
+.env
+.env.*
+!.env.sample
+
+# Python virtual envs
+venv/
+.venv/
+
+# Static & media outputs (collected at runtime)
+staticfiles/
+media/
+
+# Celery / runtime artifacts
+celerybeat-schedule
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+
+# SQLite (if ever used locally)
+*.sqlite3

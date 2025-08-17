@@ -219,8 +219,14 @@ body.auth-page nav.navbar { display:none; }
   .mobile-card-list .indicator-dot { margin-right:.4rem; }
   .btn-delete-sm { padding:.25rem .55rem; font-size:.55rem; }
   /* Strengthen text contrast inside mobile cards */
-  .mobile-card-list strong { color:#fff; }
-  .mobile-card-list .text-muted { color:rgba(255,255,255,0.65)!important; }
+  /* Explicit dark text colors to match table styling */
+  .mobile-card-list,
+  .mobile-card-list strong,
+  .mobile-card-list .rc-route, .mobile-card-list .hc-route, .mobile-card-list .sc-route,
+  .mobile-card-list .rc-car, .mobile-card-list .hc-car, .mobile-card-list .sc-dates,
+  .mobile-card-list .rc-times, .mobile-card-list .hc-times { color:#212529; }
+  .mobile-card-list .text-muted { color:rgba(0,0,0,0.55)!important; }
+  .mobile-card-list .lbl { color:rgba(0,0,0,0.60); }
 }
 
 @media (prefers-color-scheme: light) and (max-width: 768px) {

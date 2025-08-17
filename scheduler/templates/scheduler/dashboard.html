@@ -183,22 +183,22 @@
                 <div class="rc-head d-flex justify-content-between align-items-start">
                     <div class="rc-locs">
                         <div class="rc-route"><span class="indicator-dot"></span><strong>{{ r.origin }}</strong><span class="arrow">→</span><span class="dest">{{ r.destination }}</span></div>
-                        <div class="rc-car small">{{ r.car_model }}</div>
                     </div>
-                    <div class="rc-badges text-end">
-                        {% if r.matches %}<span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>{% endif %}
-                        {% if r.notified %}<span class="badge notified-badge ms-1">🔔</span>{% endif %}
-                    </div>
+                                        <div class="rc-badges text-end">
+                                                {% if r.distance or r.travel_hours %}
+                                                    <div class="rc-trip small">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %} / {% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</div>
+                                                {% endif %}
+                                                <div class="rc-badge-line">
+                                                    {% if r.matches %}<span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>{% endif %}
+                                                    {% if r.notified %}<span class="badge notified-badge ms-1">🔔</span>{% endif %}
+                                                </div>
+                                        </div>
                 </div>
-                <div class="rc-times mt-2 small">
-                    <div><span class="lbl">Pickup:</span> {{ r.available_at_display }}</div>
-                    <div><span class="lbl">Return:</span> {{ r.latest_return_display }}</div>
+                <div class="rc-details mt-2 small">
+                    <div class="rc-field"><span class="lbl">Pickup:</span><span class="val">{{ r.available_at_display }}</span></div>
+                    <div class="rc-field"><span class="lbl">Return:</span><span class="val">{{ r.latest_return_display }}</span></div>
+                    <div class="rc-field full"><span class="lbl">Car:</span><span class="val">{{ r.car_model }}</span></div>
                 </div>
-                {% if r.distance or r.travel_hours %}
-                <div class="rc-trip mt-2">
-                    <span class="trip-pill">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %}<span class="text-muted">/</span>{% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</span>
-                </div>
-                {% endif %}
             </div>
             {% empty %}
             <div class="text-muted small mt-2">No current availability.</div>

@@ -4,21 +4,32 @@ A Django & Celery based solution that monitors Hertz Freerider every 2 minutes
 
 ## Features
 
-* **Mobile‑first dashboard** – manage unlimited search rules with wildcards.
-* **Secure authentication** – uses Django’s built‑in auth.
 * **Pushover notifications** – one alert per unique ride (no spam).
 * **Dockerized** – includes PostgreSQL, Redis, Celery worker & beat.
-* **English‑only UI** – regardless of backend locale.
+* **Secure authentication** – uses Django’s built‑in auth.
 
 ## Screenshots
 
+### Desktop
 <p align="center">
-   <a href="docs/img/screenshot_login.png" target="_blank"><img src="docs/img/screenshot_login.png" alt="Login" width="310" style="max-width:100%; border:1px solid #ccc; border-radius:10px; margin:4px;"></a>
-   <a href="docs/img/screenshot_dashboard_01.png" target="_blank"><img src="docs/img/screenshot_dashboard_01.png" alt="Dashboard searches and live availability" width="310" style="max-width:100%; border:1px solid #ccc; border-radius:10px; margin:4px;"></a>
-   <a href="docs/img/screenshot_dashboard_02.png" target="_blank"><img src="docs/img/screenshot_dashboard_02.png" alt="Dashboard notification history" width="310" style="max-width:100%; border:1px solid #ccc; border-radius:10px; margin:4px;"></a>
+   <a href="docs/img/screenshot_login.png" target="_blank" title="Desktop – Login"><img src="docs/img/screenshot_login.png" alt="Desktop login screen" width="300" style="max-width:100%; border:1px solid #ccc; border-radius:12px; margin:6px;"></a>
+   <a href="docs/img/screenshot_dashboard_01.png" target="_blank" title="Desktop – Searches & live availability"><img src="docs/img/screenshot_dashboard_01.png" alt="Desktop dashboard showing searches and live availability" width="300" style="max-width:100%; border:1px solid #ccc; border-radius:12px; margin:6px;"></a>
+   <a href="docs/img/screenshot_dashboard_02.png" target="_blank" title="Desktop – Notification history"><img src="docs/img/screenshot_dashboard_02.png" alt="Desktop dashboard notification history view" width="300" style="max-width:100%; border:1px solid #ccc; border-radius:12px; margin:6px;"></a>
+</p>
+<p align="center" style="margin-top:-6px;">
+   <sub><strong>Left → Right:</strong> Login · Searches + Live availability · Notification history</sub>
 </p>
 
-Click any image to view it full size.
+### Mobile
+<p align="center">
+   <a href="docs/img/screenshot_mobile_01.png" target="_blank" title="Mobile – Searches list"><img src="docs/img/screenshot_mobile_01.png" alt="Mobile view – searches list" height="320" style="max-height:320px; border:1px solid #ccc; border-radius:28px; margin:6px; aspect-ratio:9/19; object-fit:cover;"></a>
+   <a href="docs/img/screenshot_mobile_02.png" target="_blank" title="Mobile – Live availability"><img src="docs/img/screenshot_mobile_02.png" alt="Mobile view – live availability list" height="320" style="max-height:320px; border:1px solid #ccc; border-radius:28px; margin:6px; aspect-ratio:9/19; object-fit:cover;"></a>
+</p>
+<p align="center" style="margin-top:-6px;">
+   <sub><strong>Mobile:</strong> Live availability feed · Searches management</sub>
+</p>
+
+<p align="center"><em>Click any image to open its full-size version.</em></p>
 
 ## Prerequisites
 

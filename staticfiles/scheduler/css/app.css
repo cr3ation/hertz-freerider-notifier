@@ -6,6 +6,8 @@
   --overlay-edge: rgba(0,0,0,0.45);
   --glass-border: rgba(255,255,255,0.25);
   --glass-bg: rgba(255,255,255,0.10);
+  --glass-bg-mobile: rgba(255,255,255,0.18); /* stronger for readability on mobile */
+  --glass-border-mobile: rgba(255,255,255,0.35);
 }
 
 /* Layout / base */
@@ -66,6 +68,9 @@ tr.row-faded { opacity:.55; }
 .loc-text { font-size:.75rem; font-weight:600; letter-spacing:.3px; }
 .btn-delete { --danger-grad: linear-gradient(135deg,#ff4d4d,#ff9966); background:var(--danger-grad); border:none; color:#fff; font-weight:600; font-size:.6rem; letter-spacing:.5px; padding:.35rem .65rem; border-radius:.65rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.35); }
 .btn-delete:hover { filter:brightness(1.1); }
+.btn-edit { background:linear-gradient(135deg,#4da9ff,#6bc4ff); border:none; color:#0b2535; font-weight:600; font-size:.6rem; letter-spacing:.5px; padding:.35rem .65rem; border-radius:.65rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.35); }
+.btn-edit:hover { filter:brightness(1.08); }
+.btn-edit-sm { padding:.25rem .55rem; font-size:.55rem; }
 .empty-row { text-align:center; font-size:.75rem; opacity:.7; }
 .searches-meta { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-top:.75rem; flex-wrap:wrap; }
 .searches-meta .small { opacity:.75; }
@@ -95,6 +100,20 @@ tr.row-faded { opacity:.55; }
 
 /* Utility */
 .text-muted small { opacity:.85; }
+
+/* Column / width utility classes extracted from inline styles */
+.col-from,.col-to { width:110px; }
+.col-origin,.col-dest { min-width:110px; }
+.col-matches { width:90px; }
+.col-actions { width:70px; }
+.col-index { width:26px; }
+.col-car-wide { min-width:200px; }
+.col-car { min-width:160px; }
+.cell-locations { min-width:220px; }
+
+/* Search inputs unified min-widths */
+#liveSearch { min-width:180px; }
+#histSearch { min-width:160px; }
 
 /* Reusable subdued meta line */
 .meta-line { font-size:.75rem; opacity:.75; }
@@ -185,4 +204,64 @@ body.auth-page nav.navbar { display:none; }
   .dashboard-section.active { display:block; }
   .live-table-wrapper, .searches-wrapper, .history-wrapper { max-height:380px; }
   .dashboard-grid { grid-template-columns:1fr; }
+}
+
+/* Mobile card layouts (shown only on < md) */
+/* Hidden by default (desktop & tablets >= 769px) */
+.mobile-card-list { display:none; }
+@media (max-width: 768px) {
+  .live-table-wrapper, .history-wrapper, .searches-wrapper { display:none; }
+  .mobile-card-list { display:flex; flex-direction:column; gap:1rem; margin-top:1rem; }
+  .route-card, .history-card { padding:1rem 1.1rem; border-radius:1rem; border:1px solid var(--glass-border-mobile); background:var(--glass-bg-mobile); box-shadow:0 6px 18px -6px rgba(0,0,0,.55); position:relative; }
+  .search-card { padding:.9rem 1rem; border-radius:1rem; border:1px solid var(--glass-border-mobile); background:var(--glass-bg-mobile); box-shadow:0 6px 18px -6px rgba(0,0,0,.55); position:relative; }
+  /* Highlight match card similar to desktop row */
+  .route-card.has-match { background:linear-gradient(135deg,rgba(255,255,255,0.93) 0%, rgba(255,255,255,0.88) 65%); border-color:rgba(255,255,255,0.95); box-shadow:0 4px 14px -6px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,0.35); }
+  .route-card.has-match .lbl { opacity:.72; }
+  .search-card.has-match { background:linear-gradient(135deg,rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.86) 70%); border-color:rgba(255,255,255,0.95); box-shadow:0 3px 12px -5px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,0.35); }
+  .search-card.has-match .lbl { opacity:.72; }
+  .route-card:before, .history-card:before { background:linear-gradient(135deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 55%); }
+  .search-card:before { background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,0) 55%); }
+  .route-card .rc-route, .history-card .hc-route { font-size:.9rem; font-weight:600; letter-spacing:.3px; display:flex; align-items:center; flex-wrap:wrap; gap:.35rem; }
+  .search-card .sc-route { font-size:.85rem; font-weight:600; display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
+  .route-card .rc-route .arrow, .history-card .hc-route .arrow { opacity:.75; }
+  .search-card .sc-route .arrow { opacity:.75; }
+  .route-card .rc-route .dest, .history-card .hc-route .dest { font-weight:500; }
+  .search-card .sc-route .dest { font-weight:500; }
+  .route-card .rc-car, .history-card .hc-car { opacity:.85; }
+  .route-card .rc-times, .history-card .hc-times { display:grid; grid-template-columns:1fr; gap:.15rem; }
+  .route-card .rc-details { display:grid; grid-template-columns:1fr 1fr; gap:.25rem .75rem; }
+  .route-card .rc-details .rc-field { display:flex; flex-direction:column; }
+  .route-card .rc-details .rc-field.full { grid-column:1 / -1; }
+  /* Align live card detail fonts with notification cards */
+  .route-card .rc-details .lbl { font-size:.6rem; letter-spacing:.05em; opacity:.7; text-transform:uppercase; margin:0 0 .05rem; }
+  .route-card .rc-details .val { font-size:inherit; font-weight:500; line-height:1.25; }
+  @media (max-width: 470px) { .route-card .rc-details { grid-template-columns:1fr; } }
+  .search-card .sc-dates { display:grid; gap:.15rem; }
+  .route-card .lbl, .history-card .lbl { text-transform:uppercase; font-size:.6rem; letter-spacing:.05em; opacity:.75; margin-right:.25rem; }
+  .search-card .lbl { text-transform:uppercase; font-size:.6rem; letter-spacing:.05em; opacity:.75; margin-right:.25rem; }
+  .route-card .rc-badges .badge, .history-card .hc-head .hc-trip { font-size:.6rem; }
+  .search-card .sc-badges .badge { font-size:.6rem; }
+  .route-card .trip-pill { margin-top:.15rem; }
+  .route-card .rc-badges { min-width:88px; }
+  .route-card .rc-badges .rc-trip { font-size:.6rem; font-weight:500; margin-bottom:.25rem; opacity:.85; letter-spacing:0; }
+  .route-card.has-match .rc-badges .rc-trip { opacity:.85; }
+  .history-card .hc-head { align-items:flex-start; }
+  .history-card .hc-trip { opacity:.85; }
+  .history-card .hc-route { margin-top:.35rem; }
+  .btn-delete-sm { padding:.25rem .55rem; font-size:.55rem; }
+  /* Strengthen text contrast inside mobile cards */
+  /* Explicit dark text colors to match table styling */
+  .mobile-card-list,
+  .mobile-card-list strong,
+  .mobile-card-list .rc-route, .mobile-card-list .hc-route, .mobile-card-list .sc-route,
+  .mobile-card-list .rc-car, .mobile-card-list .hc-car, .mobile-card-list .sc-dates,
+  .mobile-card-list .rc-times, .mobile-card-list .hc-times { color:#212529; }
+  .mobile-card-list .text-muted { color:rgba(0,0,0,0.55)!important; }
+  .mobile-card-list .lbl { color:rgba(0,0,0,0.60); }
+}
+
+@media (prefers-color-scheme: light) and (max-width: 768px) {
+  .route-card, .history-card { background:rgba(255,255,255,0.65); border-color:rgba(0,0,0,0.08); }
+  .mobile-card-list .text-muted { color:rgba(0,0,0,0.55)!important; }
+  .route-card .rc-route strong, .history-card .hc-route strong { color:#222; }
 }

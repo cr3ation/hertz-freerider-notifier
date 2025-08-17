@@ -45,10 +45,16 @@ cp .env.sample .env
 Edit `.env` and update these important variables:
 - `PUSHOVER_USER` - Your Pushover user key
 - `PUSHOVER_TOKEN` - Your Pushover app token  
-- `SECRET_KEY` - A secure random string for Django
+- `SECRET_KEY` - A secure random string for Django (generate one with the command below)
 - `DB_PASS` - A secure password for the database
  - (Optional) `APP_PORT` / `APP_DEBUGPY_PORT` if the defaults 8000 / 5678 clash on your system
  - (Optional) `CSRF_TRUSTED_ORIGINS` (comma-separated, full scheme+host) e.g. `https://mydomain.com,https://app.mydomain.com`
+
+Generate a new Django secret key:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
 
 ### 3. Start the application
 
@@ -141,7 +147,7 @@ docker compose exec app python manage.py createsuperuser
 | `DB_HOST` | Database host | `db` |
 | `DB_PORT` | Database port | `5432` |
 | `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `127.0.0.1,localhost` |
-| `CSRF_TRUSTED_ORIGINS` | Comma-separated list of trusted origins (include scheme) for CSRF protection | *(empty)* |
+| `CSRF_TRUSTED_ORIGINS` | Comma-separated list of trusted origins (include scheme) for CSRF protection | (empty) |
 | `PUSHOVER_USER` | Your Pushover user key | - |
 | `PUSHOVER_TOKEN` | Your Pushover app token | - |
 | `DJANGO_SUPERUSER_USERNAME` | Auto-created admin username (if absent) | `admin` |

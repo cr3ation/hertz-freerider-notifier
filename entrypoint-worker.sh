@@ -13,18 +13,11 @@ set -e
 echo "Starting Django application..."
 
 echo "Waiting for database to be ready..."
-python manage.py shell -c "
-import sys
-from django.db import connection
-from django.core.management.color import no_style
-style = no_style()
-try:
-    connection.cursor()
-except Exception as e:
-    print('Database not ready yet, retrying...')
-    sys.exit(1)
-print('Database is ready!')
-"
+until python manage.py shell -c "from django.db import connection; connection.cursor()" 2>/dev/null; do
+    echo 'Database not ready yet...';
+    sleep 2;
+done
+echo 'Database is ready!'
 
 echo "Collecting static files..."
 python manage.py collectstatic --noinput

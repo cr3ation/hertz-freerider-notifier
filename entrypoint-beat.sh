@@ -5,18 +5,11 @@ echo "Starting Django application..."
 
 # Wait for database to be ready
 echo "Waiting for database..."
-python manage.py shell -c "
-import sys
-from django.db import connection
-from django.core.management.color import no_style
-style = no_style()
-try:
-    connection.cursor()
-except Exception as e:
-    print('Database not ready yet, retrying...')
-    sys.exit(1)
-print('Database is ready!')
-"
+until python manage.py shell -c "from django.db import connection; connection.cursor()" 2>/dev/null; do
+    echo 'Database not ready yet...';
+    sleep 2;
+done
+echo 'Database is ready!'
 
 # Start Celery beat (with optional debugpy when DEBUG=1)
 if [ "$DEBUG" = "1" ]; then

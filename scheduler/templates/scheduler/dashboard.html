@@ -65,6 +65,30 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Mobile search cards -->
+            <div class="searches-cards mobile-card-list">
+                {% for s in searches %}
+                    {% with mc=search_match_counts|get_item:s.id %}
+                    <div class="search-card glass-card {% if mc %}has-match{% else %}row-faded{% endif %}">
+                        <div class="sc-head d-flex justify-content-between align-items-start">
+                            <div class="sc-route"><span class="indicator-dot"></span><strong>{{ s.origin }}</strong><span class="arrow">→</span><span class="dest">{{ s.destination }}</span></div>
+                            <div class="sc-badges text-end">
+                                {% if mc %}<span class="badge match-badge" title="Current matching routes">{{ mc }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="sc-dates mt-2 small">
+                            <div><span class="lbl">From:</span> {{ s.date_from }}</div>
+                            <div><span class="lbl">To:</span> {{ s.date_to }}</div>
+                        </div>
+                        <div class="sc-actions mt-2 d-flex justify-content-end">
+                            <a href="{% url 'delete_search' s.pk %}" class="btn-delete btn-delete-sm" title="Delete search">Delete</a>
+                        </div>
+                    </div>
+                    {% endwith %}
+                {% empty %}
+                <div class="text-muted small">No searches yet – add one above.</div>
+                {% endfor %}
+            </div>
             <div class="searches-meta">
                 <div class="small">Total searches: {{ searches|length }}</div>
                 <div class="small">Currently matching routes: {{ matching_routes }}</div>
@@ -152,6 +176,34 @@
                 </tbody>
             </table>
         </div>
+        <!-- Mobile card list (hidden on md+ via CSS) -->
+        <div class="live-cards mobile-card-list">
+            {% for r in available_routes %}
+            <div class="route-row route-card glass-card {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
+                <div class="rc-head d-flex justify-content-between align-items-start">
+                    <div class="rc-locs">
+                        <div class="rc-route"><span class="indicator-dot"></span><strong>{{ r.origin }}</strong><span class="arrow">→</span><span class="dest">{{ r.destination }}</span></div>
+                        <div class="rc-car small">{{ r.car_model }}</div>
+                    </div>
+                    <div class="rc-badges text-end">
+                        {% if r.matches %}<span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>{% endif %}
+                        {% if r.notified %}<span class="badge notified-badge ms-1">🔔</span>{% endif %}
+                    </div>
+                </div>
+                <div class="rc-times mt-2 small">
+                    <div><span class="lbl">Pickup:</span> {{ r.available_at_display }}</div>
+                    <div><span class="lbl">Return:</span> {{ r.latest_return_display }}</div>
+                </div>
+                {% if r.distance or r.travel_hours %}
+                <div class="rc-trip mt-2">
+                    <span class="trip-pill">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %}<span class="text-muted">/</span>{% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="text-muted small mt-2">No current availability.</div>
+            {% endfor %}
+        </div>
         <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
             <p class="text-muted mb-0 small">Updates on page load (auto-refresh can be added later)</p>
             <button id="scrollTopLive" class="btn btn-light btn-sm">Top</button>
@@ -189,7 +241,7 @@
                 const search = document.getElementById('liveSearch');
                 const visibleCount = document.getElementById('liveVisibleCount');
                 const wrapper = document.querySelector('.live-table-wrapper');
-                const rows = () => Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row'));
+                const rows = () => Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row, .live-cards .route-row'));
                 let filterMatches = false, filterNotified = false;
 
                 function applyFilters(){
@@ -280,6 +332,25 @@
                 </tbody>
             </table>
         </div>
+        <!-- Mobile history cards -->
+        <div class="history-cards mobile-card-list">
+            {% for n in notified_history %}
+            <div class="history-card glass-card route-row row-faded" data-notified="{{ n.notified_at|date:'c' }}">
+                <div class="hc-head d-flex justify-content-between">
+                    <div class="hc-time small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</div>
+                    {% if n.distance or n.travel_time_hours %}<div class="hc-trip small text-end">{% if n.distance %}{{ n.distance|floatformat:0 }} km{% endif %}{% if n.distance and n.travel_time_hours %} / {% endif %}{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</div>{% endif %}
+                </div>
+                <div class="hc-route mt-1"><strong>{{ n.pickup_location_name }}</strong><span class="arrow">→</span><span class="dest">{{ n.return_location_name }}</span></div>
+                <div class="hc-times mt-2 small">
+                    {% if n.available_at %}<div><span class="lbl">Pickup:</span> {{ n.available_at|date:"Y-m-d H:i" }}</div>{% endif %}
+                    {% if n.latest_return %}<div><span class="lbl">Return:</span> {{ n.latest_return|date:"Y-m-d H:i" }}</div>{% endif %}
+                </div>
+                <div class="hc-car mt-2 small">{{ n.car_type }}</div>
+            </div>
+            {% empty %}
+            <div class="text-muted small mt-2">No notifications yet.</div>
+            {% endfor %}
+        </div>
         <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
             <p class="text-muted small mb-0">Filtering is local in your browser.</p>
             <button id="histScrollTop" class="btn btn-light btn-sm" type="button">Top</button>
@@ -299,20 +370,22 @@
                     const now = new Date();
                     let visible = 0;
                     const limit = selTime.value;
-                    Array.from(body.querySelectorAll('tr')).forEach(tr => {
-                        if(!tr.dataset.notified) return; // skip empty row
-                        const text = tr.innerText.toLowerCase();
+                    const rows = Array.from(body.querySelectorAll('tr.route-row'))
+                        .concat(Array.from(document.querySelectorAll('.history-cards .history-card')));
+                    rows.forEach(el => {
+                        if(!el.dataset.notified) return;
+                        const text = el.innerText.toLowerCase();
                         let show = true;
                         if(term){ show = text.indexOf(term) !== -1; }
                         if(show && limit !== 'all'){
-                            const dt = new Date(tr.dataset.notified);
+                            const dt = new Date(el.dataset.notified);
                             if(limit === '24h'){
                                 show = (now - dt) <= 24*3600*1000;
                             } else if(limit === '7d'){
                                 show = (now - dt) <= 7*24*3600*1000;
                             }
                         }
-                        tr.style.display = show ? '' : 'none';
+                        el.style.display = show ? '' : 'none';
                         if(show) visible++;
                     });
                     count.textContent = visible;

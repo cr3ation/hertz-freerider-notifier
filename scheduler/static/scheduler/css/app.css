@@ -98,6 +98,20 @@ tr.row-faded { opacity:.55; }
 /* Utility */
 .text-muted small { opacity:.85; }
 
+/* Column / width utility classes extracted from inline styles */
+.col-from,.col-to { width:110px; }
+.col-origin,.col-dest { min-width:110px; }
+.col-matches { width:90px; }
+.col-actions { width:70px; }
+.col-index { width:26px; }
+.col-car-wide { min-width:200px; }
+.col-car { min-width:160px; }
+.cell-locations { min-width:220px; }
+
+/* Search inputs unified min-widths */
+#liveSearch { min-width:180px; }
+#histSearch { min-width:160px; }
+
 /* Reusable subdued meta line */
 .meta-line { font-size:.75rem; opacity:.75; }
 

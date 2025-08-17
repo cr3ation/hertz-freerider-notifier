@@ -27,12 +27,12 @@
                 <table class="table table-sm align-middle searches-table">
                     <thead>
                         <tr>
-                            <th style="width:110px;">From</th>
-                            <th style="width:110px;">To</th>
-                            <th style="min-width:110px;">Origin</th>
-                            <th style="min-width:110px;">Destination</th>
-                            <th style="width:90px;" class="text-center">Matches</th>
-                            <th style="width:70px;"></th>
+                            <th class="col-from">From</th>
+                            <th class="col-to">To</th>
+                            <th class="col-origin">Origin</th>
+                            <th class="col-dest">Destination</th>
+                            <th class="col-matches text-center">Matches</th>
+                            <th class="col-actions"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -105,7 +105,7 @@
                 <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" style="min-width:180px;" aria-label="Search live availability">
+                <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" aria-label="Search live availability">
                 <button id="toggleShowMatches" class="btn btn-outline-success btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes that match any of your searches">
                     <span class="btn-ico" aria-hidden="true">✓</span><span class="btn-text"> Matches</span>
                 </button>
@@ -137,13 +137,13 @@
                 <tbody>
                     {% for r in available_routes %}
                         <tr class="route-row {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
-                            <td class="cell-locations" style="min-width:220px;">
+                            <td class="cell-locations">
                                 <strong>{{ r.origin }}</strong><br>
                                 <span class="text-muted">→ {{ r.destination }}</span>
                             </td>
                             <td><span class="d-block small fw-semibold">{{ r.available_at_display }}</span></td>
                             <td><span class="d-block small text-muted">{{ r.latest_return_display }}</span></td>
-                            <td style="min-width:200px;">
+                            <td class="col-car-wide">
                                 <span class="small">{{ r.car_model }}</span>
                             </td>
                             <td class="text-end">
@@ -281,7 +281,7 @@
                 <div class="meta-line">Showing up to the 50 latest notifications</div>
             </div>
             <div class="history-filters d-flex flex-wrap gap-2 align-items-center">
-                <input id="histSearch" type="text" class="form-control" placeholder="Search location / car" style="min-width:160px;" aria-label="Search history">
+                <input id="histSearch" type="text" class="form-control" placeholder="Search location / car" aria-label="Search history">
                 <select id="histTime" class="form-select" aria-label="Filter time range">
                     <option value="all" selected>All time</option>
                     <option value="24h">Last 24h</option>
@@ -295,7 +295,7 @@
             <table class="table table-sm align-middle history-table mb-0">
                 <thead>
                     <tr>
-                        <th style="width:26px;" title="Index">#</th>
+                        <th class="col-index" title="Index">#</th>
                         <th>Notified</th>
                         <th>Route</th>
                         <th>Pickup</th>
@@ -309,13 +309,13 @@
                         <tr class="route-row row-faded" data-notified="{{ n.notified_at|date:'c' }}">
                             <td class="text-muted small">{{ forloop.counter }}</td>
                             <td><span class="d-block small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
-                            <td class="cell-route" style="min-width:200px;">
+                            <td class="cell-route">
                                 <strong>{{ n.pickup_location_name }}</strong><br>
                                 <span class="text-muted">→ {{ n.return_location_name }}</span>
                             </td>
                             <td><span class="d-block small">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
                             <td><span class="d-block small text-muted">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
-                            <td style="min-width:160px;"><span class="small">{{ n.car_type }}</span></td>
+                            <td class="col-car"><span class="small">{{ n.car_type }}</span></td>
                             <td class="text-end">
                                 {% if n.distance or n.travel_time_hours %}
                                     <span class="history-pill">{% if n.distance %}{{ n.distance|floatformat:0 }} km{% endif %}{% if n.distance and n.travel_time_hours %}<span class="text-muted">/</span>{% endif %}{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</span>

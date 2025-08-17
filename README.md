@@ -1,6 +1,6 @@
 # Hertz Freerider Notifier
 
-A Django & Celery based solution that monitors Hertz Freerider every 2 minutes and sends Pushover alerts whenever a car that matches your saved searches becomes available.
+A Django & Celery based solution that monitors Hertz Freerider at a configurable interval (default every 2 minutes) and sends Pushover alerts whenever a car that matches your saved searches becomes available.
 
 ## Features
 
@@ -56,16 +56,10 @@ cp .env.sample .env
 Edit `.env` and update these important variables:
 - `PUSHOVER_USER` - Your Pushover user key
 - `PUSHOVER_TOKEN` - Your Pushover app token  
-- `SECRET_KEY` - A secure random string for Django (generate one with the command below)
+- `SECRET_KEY` - A secure random string for Django
 - `DB_PASS` - A secure password for the database
  - (Optional) `APP_PORT` / `APP_DEBUGPY_PORT` if the defaults 8000 / 5678 clash on your system
  - (Optional) `CSRF_TRUSTED_ORIGINS` (comma-separated, full scheme+host) e.g. `https://mydomain.com,https://app.mydomain.com`
-
-Generate a new Django secret key:
-
-```bash
-python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-```
 
 ### 3. Start the application
 
@@ -80,7 +74,7 @@ This will automatically:
    * db (PostgreSQL)
    * redis (broker / cache)
    * worker (Celery worker)
-   * beat (Celery beat scheduler – runs every 120s)
+   * beat (Celery beat scheduler – runs every `HERTZ_CHECK_INTERVAL` seconds, default 120s)
 * Run migrations
 * Create a default superuser (if missing)
 * Collect static files (served via WhiteNoise)
@@ -150,6 +144,7 @@ docker compose exec app python manage.py createsuperuser
 | ---- | ----------- | ------- |
 | `SECRET_KEY` | Django secret key | `changeme` |
 | `DEBUG` | Debug mode (0 or 1) | `0` |
+| `HERTZ_CHECK_INTERVAL` | Interval in seconds between Hertz API checks (Celery beat) | `120` |
 | `APP_PORT` | Host port exposed for Django web app | `8000` |
 | `APP_DEBUGPY_PORT` | Host port for Django debugpy (when `DEBUG=1`) | `5678` |
 | `DB_NAME` | Database name | `db` |
@@ -169,7 +164,7 @@ See `.env.sample` for the complete configuration template.
 
 ## How It Works
 
-1. **Celery Beat** runs every 2 minutes (120s) and triggers the monitoring task
+1. **Celery Beat** runs every `HERTZ_CHECK_INTERVAL` seconds (default 120s) and triggers the monitoring task
 2. **Celery Worker** executes the task that:
    - Fetches available rides from Hertz Freerider API
    - Compares them against your saved search criteria

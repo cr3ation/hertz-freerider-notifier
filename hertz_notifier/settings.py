@@ -94,10 +94,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+HERTZ_CHECK_INTERVAL = float(os.getenv('HERTZ_CHECK_INTERVAL', '120'))  # seconds
 CELERY_BEAT_SCHEDULE = {
     'check_hertz_freerider': {
         'task': 'scheduler.tasks.check_hertz',
-        'schedule': 120.0,
+    'schedule': HERTZ_CHECK_INTERVAL,
     },
 }
 

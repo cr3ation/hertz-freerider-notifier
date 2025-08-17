@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from .forms import SavedSearchForm
 from .models import SavedSearch, NotifiedRide
 from .utils import fetch_routes, wildcard_match
@@ -70,15 +71,30 @@ def dashboard(request):
                     'matches': matches,
                     'notified': NotifiedRide.objects.filter(ride_id=route_id).exists(),
                 })
+    editing_id = None
+    active_tab = request.GET.get('tab') or 'live'
     if request.method == 'POST':
-        form = SavedSearchForm(request.POST)
+        editing_id = request.POST.get('editing_id') or None
+        if editing_id:
+            search_obj = get_object_or_404(SavedSearch, pk=editing_id, owner=request.user)
+            form = SavedSearchForm(request.POST, instance=search_obj)
+            active_tab = 'searches'
+        else:
+            form = SavedSearchForm(request.POST)
         if form.is_valid():
             saved = form.save(commit=False)
             saved.owner = request.user
             saved.save()
-            return redirect('dashboard')
+            return redirect(f"{reverse('dashboard')}?tab=searches")
     else:
-        form = SavedSearchForm()
+        edit_param = request.GET.get('edit')
+        if edit_param:
+            search_obj = get_object_or_404(SavedSearch, pk=edit_param, owner=request.user)
+            form = SavedSearchForm(instance=search_obj)
+            editing_id = search_obj.id
+            active_tab = 'searches'
+        else:
+            form = SavedSearchForm()
     # Recent notification history (latest first)
     notified_history_raw = list(NotifiedRide.objects.order_by('-notified_at')[:50])
     notified_history = []
@@ -103,6 +119,8 @@ def dashboard(request):
         'matching_routes': sum(1 for r in available_routes if r['matches']),
         'api_error': api_error,
         'notified_history': notified_history,
+    'editing_id': editing_id,
+    'active_tab': active_tab,
     })
 
 @login_required

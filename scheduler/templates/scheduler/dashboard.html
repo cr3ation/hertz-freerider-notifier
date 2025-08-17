@@ -5,20 +5,24 @@
 
 <!-- Mobile tab navigation (hidden on larger screens) -->
 <div class="mobile-tabs mb-3 d-flex d-md-none" role="tablist" aria-label="Dashboard sections">
-  <button id="tabbtn-live" type="button" class="nav-link active" data-target="tab-live" aria-controls="tab-live" aria-selected="true">Live activity</button>
-  <button id="tabbtn-searches" type="button" class="nav-link" data-target="tab-searches" aria-controls="tab-searches" aria-selected="false">Searches</button>
-  <button id="tabbtn-notifications" type="button" class="nav-link" data-target="tab-notifications" aria-controls="tab-notifications" aria-selected="false">Notifications</button>
+    <button id="tabbtn-live" type="button" class="nav-link {% if active_tab == 'live' %}active{% endif %}" data-target="tab-live" aria-controls="tab-live" aria-selected="{% if active_tab == 'live' %}true{% else %}false{% endif %}">Live activity</button>
+    <button id="tabbtn-searches" type="button" class="nav-link {% if active_tab == 'searches' %}active{% endif %}" data-target="tab-searches" aria-controls="tab-searches" aria-selected="{% if active_tab == 'searches' %}true{% else %}false{% endif %}">Searches</button>
+    <button id="tabbtn-notifications" type="button" class="nav-link {% if active_tab == 'notifications' %}active{% endif %}" data-target="tab-notifications" aria-controls="tab-notifications" aria-selected="{% if active_tab == 'notifications' %}true{% else %}false{% endif %}">Notifications</button>
 </div>
 
 <!-- Searches (form + list) -->
-<div id="tab-searches" class="dashboard-section" role="tabpanel" aria-labelledby="tabbtn-searches">
+<div id="tab-searches" class="dashboard-section {% if active_tab == 'searches' %}active{% endif %}" role="tabpanel" aria-labelledby="tabbtn-searches">
     <div class="dashboard-grid mb-4">
         <div class="glass-card p-4 form-card">
             <h5 class="section-title mb-3">Add new alert</h5>
             <form method="post" novalidate>
                 {% csrf_token %}
+                {% if editing_id %}<input type="hidden" name="editing_id" value="{{ editing_id }}">{% endif %}
                 {{ form.as_p }}
-                <button class="btn btn-primary w-100 mt-2" type="submit">Save alert</button>
+                <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-primary w-100" type="submit">{% if editing_id %}Update alert{% else %}Save alert{% endif %}</button>
+                    {% if editing_id %}<a class="btn btn-outline-secondary" href="{% url 'dashboard' %}?tab=searches">Cancel</a>{% endif %}
+                </div>
             </form>
         </div>
         <div class="glass-card p-4">
@@ -51,7 +55,10 @@
                                     {% endif %}
                                 </td>
                                 <td class="action-col">
-                                    <a href="{% url 'delete_search' s.pk %}" class="btn-delete" title="Delete search">Delete</a>
+                                    <div class="d-flex flex-column gap-1 align-items-end">
+                                        <a href="{% url 'dashboard' %}?tab=searches&edit={{ s.pk }}" class="btn-edit" title="Edit search">Edit</a>
+                                        <a href="{% url 'delete_search' s.pk %}" class="btn-delete" title="Delete search">Delete</a>
+                                    </div>
                                 </td>
                             </tr>
                             {% endwith %}
@@ -79,7 +86,10 @@
                             <div><span class="lbl">To:</span> {{ s.date_to }}</div>
                         </div>
                         <div class="sc-actions mt-2 d-flex justify-content-end">
-                            <a href="{% url 'delete_search' s.pk %}" class="btn-delete btn-delete-sm" title="Delete search">Delete</a>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'dashboard' %}?tab=searches&edit={{ s.pk }}" class="btn-edit btn-edit-sm" title="Edit search">Edit</a>
+                                <a href="{% url 'delete_search' s.pk %}" class="btn-delete btn-delete-sm" title="Delete search">Delete</a>
+                            </div>
                         </div>
                     </div>
                     {% endwith %}
@@ -96,7 +106,7 @@
 </div>
 
 <!-- Live availability -->
-<div id="tab-live" class="dashboard-section active" role="tabpanel" aria-labelledby="tabbtn-live">
+<div id="tab-live" class="dashboard-section {% if active_tab == 'live' %}active{% endif %}" role="tabpanel" aria-labelledby="tabbtn-live">
     <div class="glass-card p-4 mt-2 mt-md-0">
         {# Live availability styles moved to external CSS #}
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 filters-bar">
@@ -272,7 +282,7 @@
     </div>
 </div>
 <!-- Notification history -->
-<div id="tab-notifications" class="dashboard-section" role="tabpanel" aria-labelledby="tabbtn-notifications">
+<div id="tab-notifications" class="dashboard-section {% if active_tab == 'notifications' %}active{% endif %}" role="tabpanel" aria-labelledby="tabbtn-notifications">
     <div class="glass-card p-4 mt-4 mt-md-3">
         {# History styles moved to external CSS #}
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
@@ -410,7 +420,7 @@
             });
         }
         buttons.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.target)));
-        if(mq.matches){ activate('tab-live'); }
+    if(mq.matches){ activate('tab-{{ active_tab|default:"live" }}'); }
     })();
 </script>
 {% endblock %}

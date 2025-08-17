@@ -68,6 +68,9 @@ tr.row-faded { opacity:.55; }
 .loc-text { font-size:.75rem; font-weight:600; letter-spacing:.3px; }
 .btn-delete { --danger-grad: linear-gradient(135deg,#ff4d4d,#ff9966); background:var(--danger-grad); border:none; color:#fff; font-weight:600; font-size:.6rem; letter-spacing:.5px; padding:.35rem .65rem; border-radius:.65rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.35); }
 .btn-delete:hover { filter:brightness(1.1); }
+.btn-edit { background:linear-gradient(135deg,#4da9ff,#6bc4ff); border:none; color:#0b2535; font-weight:600; font-size:.6rem; letter-spacing:.5px; padding:.35rem .65rem; border-radius:.65rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.35); }
+.btn-edit:hover { filter:brightness(1.08); }
+.btn-edit-sm { padding:.25rem .55rem; font-size:.55rem; }
 .empty-row { text-align:center; font-size:.75rem; opacity:.7; }
 .searches-meta { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-top:.75rem; flex-wrap:wrap; }
 .searches-meta .small { opacity:.75; }

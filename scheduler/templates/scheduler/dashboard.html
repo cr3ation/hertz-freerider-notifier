@@ -247,13 +247,23 @@
                 const search = document.getElementById('liveSearch');
                 const visibleCount = document.getElementById('liveVisibleCount');
                 const wrapper = document.querySelector('.live-table-wrapper');
-                const rows = () => Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row, .live-cards .route-row'));
+                const tableWrapper = document.querySelector('.live-table-wrapper');
+                const cardsWrapper = document.querySelector('.live-cards');
+                // All duplicate rows (table + mobile cards) – used for applying filters to both variants
+                const allRows = () => Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row, .live-cards .route-row'));
+                // Return the set of rows belonging to the currently visible variant (table on desktop, cards on mobile)
+                function activeVariantRows(){
+                    if(cardsWrapper && window.getComputedStyle(cardsWrapper).display !== 'none'){
+                        return Array.from(cardsWrapper.querySelectorAll('.route-row'));
+                    }
+                    return Array.from(tableWrapper.querySelectorAll('tbody tr.route-row'));
+                }
                 let filterMatches = false, filterNotified = false;
 
                 function applyFilters(){
                     const term = search.value.trim().toLowerCase();
-                    let visible = 0;
-                    rows().forEach(r => {
+                    // Apply filtering to ALL rows (table + hidden/mobile duplicate) so that switching layout keeps state
+                    allRows().forEach(r => {
                         const isMatch = r.classList.contains('has-match');
                         const isNotified = r.classList.contains('notified-row');
                         let show = true;
@@ -264,10 +274,12 @@
                             show = show && txt.indexOf(term) !== -1;
                         }
                         r.style.display = show ? '' : 'none';
-                        if(show) visible++;
                     });
-                    const total = rows().length;
-                    visibleCount.textContent = visible + ' / ' + total;
+                    // Count only rows in the currently visible variant (avoid double counting table + cards)
+                    const activeRows = activeVariantRows();
+                    const activeVisible = activeRows.filter(r => r.style.display !== 'none').length;
+                    const total = activeRows.length;
+                    visibleCount.textContent = activeVisible + ' / ' + total;
                     btnMatches.classList.toggle('filter-active', filterMatches);
                     btnNotified.classList.toggle('filter-active', filterNotified);
                 }

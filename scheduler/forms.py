@@ -8,6 +8,7 @@ class SavedSearchForm(forms.ModelForm):
         widgets = {
             'date_from': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'date_to': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'origin': forms.TextInput(attrs={'class': 'form-control'}),
-            'destination': forms.TextInput(attrs={'class': 'form-control'}),
+            # "hertz-locations" is a <datalist> of all Hertz stations rendered by the dashboard
+            'origin': forms.TextInput(attrs={'class': 'form-control', 'list': 'hertz-locations', 'placeholder': 'e.g. Stockholm*'}),
+            'destination': forms.TextInput(attrs={'class': 'form-control', 'list': 'hertz-locations', 'placeholder': 'e.g. * (anywhere)'}),
         }

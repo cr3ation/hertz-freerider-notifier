@@ -51,6 +51,9 @@ services:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - CELERY_BROKER_URL=redis://redis:6379/0
+      # The worker sends the notifications (scheduler.tasks.check_hertz)
+      - PUSHOVER_USER=${PUSHOVER_USER}
+      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
     depends_on:
       - db
       - redis

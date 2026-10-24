@@ -103,8 +103,11 @@
     if (!hasCoords) return;
     if (!map) {
       map = L.map('routeMap');
+      // OSM's tile policy requires a Referer. Django's default "same-origin" Referrer-Policy strips it for
+      // cross-origin requests, so send the origin (never the full URL) for tile images only.
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 18,
+        referrerPolicy: 'strict-origin-when-cross-origin',
       }).addTo(map);
       layer = L.layerGroup().addTo(map);
     }

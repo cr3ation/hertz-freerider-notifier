@@ -122,7 +122,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 filters-bar">
             <div>
                 <h5 class="mb-1 section-title">{% icon 'car' 18 %}Live availability</h5>
-                <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches · {{ total_cars }} cars in total</div>
+                <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches · {{ total_cars }} cars available</div>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
                 <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" aria-label="Search live availability">
@@ -222,7 +222,9 @@
             {% endfor %}
         </div>
         <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-            <p class="hint-line mb-0">{% icon 'info' 14 %}Click a route for map, pickup instructions and opening hours.</p>
+            <p class="hint-line mb-0">{% icon 'info' 14 %}Click a route for map, pickup instructions and opening hours.
+                <span><span class="mini-badge twin">×2</span>identical cars on the same route</span>
+                <span><span class="mini-badge alt">+4 alt.</span>the same car can also go elsewhere (shown as separate rows)</span></p>
             <button id="scrollTopLive" class="btn btn-light btn-sm">Top</button>
         </div>
         <script>

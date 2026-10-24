@@ -40,8 +40,11 @@ def dashboard(request):
         raw_data = []
         api_error = str(e)
 
-    ride_ids = [str(r.get('id')) for pair in raw_data if isinstance(pair, dict) for r in pair.get('routes', [])] \
+    api_routes = [r for pair in raw_data if isinstance(pair, dict) for r in pair.get('routes', [])] \
         if isinstance(raw_data, list) else []
+    ride_ids = [str(r.get('id')) for r in api_routes]
+    # One car can be offered to several destinations (same transportOfferId), so count each car once
+    total_cars = len({r.get('transportOfferId') or r.get('id') for r in api_routes})
     notified_ids = set(NotifiedRide.objects.filter(ride_id__in=ride_ids).values_list('ride_id', flat=True))
     available_routes, route_details, search_match_counts = build_routes(raw_data, searches, notified_ids, now)
 
@@ -97,7 +100,7 @@ def dashboard(request):
         'route_details': route_details,
         'search_match_counts': search_match_counts,
         'total_routes': len(available_routes),
-        'total_cars': sum(r['count'] for r in available_routes),
+        'total_cars': total_cars,
         'matching_routes': sum(1 for r in available_routes if r['matches']),
         'api_error': api_error,
         'notified_history': notified_history,

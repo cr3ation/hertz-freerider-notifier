@@ -276,7 +276,9 @@ body.auth-page nav.navbar { display:none; }
 .ico { flex:none; vertical-align:-2px; }
 .form-card form .helptext { font-size:.7rem; opacity:.7; color:#fff; }
 .form-card form input::placeholder { color:rgba(255,255,255,.55); }
-.hint-line { font-size:.75rem; opacity:.8; display:flex; align-items:center; gap:.4rem; }
+.hint-line { font-size:.75rem; opacity:.85; display:flex; align-items:center; flex-wrap:wrap; gap:.3rem .9rem; }
+.hint-line > span { display:inline-flex; align-items:center; gap:.3rem; }
+.hint-line .mini-badge { margin:0; }
 
 /* Opaque sticky headers so scrolled rows don't show through */
 .live-table-wrapper thead th, .history-wrapper thead th, .searches-table thead th { background:rgba(238,240,243,.97)!important; color:#343a40; }

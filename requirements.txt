@@ -1,9 +1,11 @@
-Django>=5.0
-psycopg[binary]
-celery>=5.3
-redis>=5.0
-requests>=2.32
-python-dotenv>=1.0
-gunicorn>=22.0
-debugpy>=1.8.0
-whitenoise>=6.0
+# Versions checked October 2026 for Python 3.14 and Django 6.1 (security support until December 2027).
+# "~=" picks up patch/security releases when the image is rebuilt, but never a new feature release.
+Django~=6.1.2
+psycopg[binary]~=3.3.6
+# The [redis] extra pins a redis client version that Celery's transport (kombu) supports
+celery[redis]~=5.6.3
+requests~=2.34
+python-dotenv~=1.2
+gunicorn~=26.2
+debugpy~=1.8.22
+whitenoise~=6.12

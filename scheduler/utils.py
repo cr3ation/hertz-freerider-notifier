@@ -1,12 +1,29 @@
 import os, requests, logging, re
 from datetime import datetime
+from django.core.cache import cache
 
 API_URL = 'https://www.hertzfreerider.se/api/transport-routes/?country=SWEDEN'
+LOCATIONS_URL = 'https://www.hertzfreerider.se/api/locations/'
 
 def fetch_routes():
     resp = requests.get(API_URL, timeout=10)
     resp.raise_for_status()
     return resp.json()
+
+def fetch_location_names():
+    """All Hertz station names (used for autocomplete), cached for a day."""
+    names = cache.get('hertz_location_names')
+    if names is None:
+        try:
+            resp = requests.get(LOCATIONS_URL, timeout=10)
+            resp.raise_for_status()
+            names = sorted({loc['name'] for loc in resp.json() if loc.get('name')})
+        except Exception as e:
+            logging.warning('Could not fetch Hertz locations: %s', e)
+            names = []
+        # Retry failed lookups sooner than successful ones
+        cache.set('hertz_location_names', names, 24 * 3600 if names else 300)
+    return names
 
 def wildcard_match(pattern, text):
     pattern = '^' + re.escape(pattern).replace('\\*', '.*') + '$'

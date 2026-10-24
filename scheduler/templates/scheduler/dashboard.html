@@ -1,7 +1,11 @@
 {% extends 'scheduler/base.html' %}
-{% load scheduler_extras %}
+{% load static scheduler_extras %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endblock %}
+{% block navbar_extra %}<span class="sync-pill"><i></i>Updated {{ updated_at|date:"H:i" }}</span>{% endblock %}
 {% block content %}
-{# Styles moved to scheduler/static/scheduler/css/app.css #}
+{# Styles live in scheduler/static/scheduler/css/app.css #}
 
 <!-- Mobile tab navigation (hidden on larger screens) -->
 <div class="mobile-tabs mb-3 d-flex d-md-none" role="tablist" aria-label="Dashboard sections">
@@ -14,7 +18,7 @@
 <div id="tab-searches" class="dashboard-section {% if active_tab == 'searches' %}active{% endif %}" role="tabpanel" aria-labelledby="tabbtn-searches">
     <div class="dashboard-grid mb-4">
         <div class="glass-card p-4 form-card">
-            <h5 class="section-title mb-3">Add new alert</h5>
+            <h5 class="section-title mb-3">{% icon 'plus' 18 %}{% if editing_id %}Edit alert{% else %}Add new alert{% endif %}</h5>
             <form method="post" novalidate>
                 {% csrf_token %}
                 {% if editing_id %}<input type="hidden" name="editing_id" value="{{ editing_id }}">{% endif %}
@@ -24,9 +28,10 @@
                     {% if editing_id %}<a class="btn btn-outline-secondary" href="{% url 'dashboard' %}?tab=searches">Cancel</a>{% endif %}
                 </div>
             </form>
+            <datalist id="hertz-locations">{% for name in location_names %}<option value="{{ name }}">{% endfor %}</datalist>
         </div>
         <div class="glass-card p-4">
-            <h5 class="section-title mb-3">Your searches</h5>
+            <h5 class="section-title mb-3">{% icon 'bell' 18 %}Your searches</h5>
             <div class="searches-wrapper mb-2">
                 <table class="table table-sm align-middle searches-table">
                     <thead>
@@ -43,8 +48,8 @@
                         {% for s in searches %}
                             {% with mc=search_match_counts|get_item:s.id %}
                             <tr class="{% if mc %}has-match{% else %}row-faded{% endif %}">
-                                <td><span class="date-pill">{{ s.date_from }}</span></td>
-                                <td><span class="date-pill">{{ s.date_to }}</span></td>
+                                <td><span class="indicator-dot"></span><span class="date-pill">{{ s.date_from|date:"Y-m-d" }}</span></td>
+                                <td><span class="date-pill">{{ s.date_to|date:"Y-m-d" }}</span></td>
                                 <td><span class="loc-text">{{ s.origin }}</span></td>
                                 <td><span class="loc-text">{{ s.destination }}</span></td>
                                 <td class="text-center">
@@ -55,16 +60,19 @@
                                     {% endif %}
                                 </td>
                                 <td class="action-col">
-                                    <div class="d-flex flex-column gap-1 align-items-end">
-                                        <a href="{% url 'dashboard' %}?tab=searches&edit={{ s.pk }}" class="btn-edit" title="Edit search">Edit</a>
-                                        <a href="{% url 'delete_search' s.pk %}" class="btn-delete" title="Delete search">Delete</a>
+                                    <div class="icon-actions">
+                                        <a href="{% url 'dashboard' %}?tab=searches&edit={{ s.pk }}" class="btn-edit" title="Edit search" aria-label="Edit search">{% icon 'edit' 13 %}</a>
+                                        <form method="post" action="{% url 'delete_search' s.pk %}" onsubmit="return confirm('Delete this alert?')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-delete" title="Delete search" aria-label="Delete search">{% icon 'trash' 13 %}</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
                             {% endwith %}
                         {% empty %}
                             <tr>
-                                <td colspan="5" class="empty-row">No searches yet – add one above.</td>
+                                <td colspan="6" class="empty-row">No searches yet – add one above.</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -82,13 +90,16 @@
                             </div>
                         </div>
                         <div class="sc-dates mt-2 small">
-                            <div><span class="lbl">From:</span> {{ s.date_from }}</div>
-                            <div><span class="lbl">To:</span> {{ s.date_to }}</div>
+                            <div><span class="lbl">From:</span> {{ s.date_from|date:"Y-m-d" }}</div>
+                            <div><span class="lbl">To:</span> {{ s.date_to|date:"Y-m-d" }}</div>
                         </div>
                         <div class="sc-actions mt-2 d-flex justify-content-end">
                             <div class="d-flex gap-2">
                                 <a href="{% url 'dashboard' %}?tab=searches&edit={{ s.pk }}" class="btn-edit btn-edit-sm" title="Edit search">Edit</a>
-                                <a href="{% url 'delete_search' s.pk %}" class="btn-delete btn-delete-sm" title="Delete search">Delete</a>
+                                <form method="post" action="{% url 'delete_search' s.pk %}" onsubmit="return confirm('Delete this alert?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-delete btn-delete-sm" title="Delete search">Delete</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -108,22 +119,21 @@
 <!-- Live availability -->
 <div id="tab-live" class="dashboard-section {% if active_tab == 'live' %}active{% endif %}" role="tabpanel" aria-labelledby="tabbtn-live">
     <div class="glass-card p-4 mt-2 mt-md-0">
-        {# Live availability styles moved to external CSS #}
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 filters-bar">
             <div>
-                <h5 class="mb-1">Live availability</h5>
-                <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches</div>
+                <h5 class="mb-1 section-title">{% icon 'car' 18 %}Live availability</h5>
+                <div class="meta-line">{{ matching_routes }} of {{ total_routes }} routes match your searches · {{ total_cars }} cars in total</div>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
                 <input id="liveSearch" type="text" class="form-control form-control-sm" placeholder="Search location / car" aria-label="Search live availability">
                 <button id="toggleShowMatches" class="btn btn-outline-success btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes that match any of your searches">
-                    <span class="btn-ico" aria-hidden="true">✓</span><span class="btn-text"> Matches</span>
+                    <span class="btn-ico" aria-hidden="true">{% icon 'check' 13 %}</span><span class="btn-text">Matches</span>
                 </button>
                 <button id="toggleShowNotified" class="btn btn-outline-info btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes you've already been notified about">
-                    <span class="btn-ico" aria-hidden="true">🔔</span><span class="btn-text"> Notified</span>
+                    <span class="btn-ico" aria-hidden="true">{% icon 'bell' 13 %}</span><span class="btn-text">Notified</span>
                 </button>
                 <button id="resetFilters" class="btn btn-outline-secondary btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Reset search & filters">
-                    <span class="btn-ico" aria-hidden="true">⟳</span><span class="btn-text"> Reset</span>
+                    <span class="btn-ico" aria-hidden="true">{% icon 'refresh' 13 %}</span><span class="btn-text">Reset</span>
                 </button>
                 <span class="badge bg-secondary" id="liveVisibleCount" title="Visible / total routes">0 / 0</span>
             </div>
@@ -136,8 +146,8 @@
                 <thead>
                     <tr>
                         <th>Origin → Destination</th>
-                        <th>Pickup</th>
-                        <th>Return</th>
+                        <th>Pick up</th>
+                        <th>Return by</th>
                         <th>Car</th>
                         <th class="text-end">Trip</th>
                         <th class="text-center">Matches</th>
@@ -146,21 +156,23 @@
                 </thead>
                 <tbody>
                     {% for r in available_routes %}
-                        <tr class="route-row {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
+                        <tr class="route-row {% if r.matches %}has-match{% else %}row-faded{% endif %} {% if r.notified %}notified-row{% endif %}" data-route-id="{{ r.id }}">
                             <td class="cell-locations">
-                                <strong>{{ r.origin }}</strong><br>
-                                <span class="text-muted">→ {{ r.destination }}</span>
+                                <div class="rt">
+                                    <div class="rt-line">{% route_marker 'origin' %}<span class="place-main">{{ r.origin.short }}</span>{% if r.origin.sub %}<span class="place-sub">{{ r.origin.sub }}</span>{% endif %}{% if r.count > 1 %}<span class="mini-badge twin" title="{{ r.count }} identical cars">×{{ r.count }}</span>{% endif %}</div>
+                                    <div class="rt-line">{% route_marker 'destination' %}<span class="place-main">{{ r.destination.short }}</span>{% if r.destination.sub %}<span class="place-sub">{{ r.destination.sub }}</span>{% endif %}{% if r.alternatives_count %}<span class="mini-badge alt" title="The same car can also be returned elsewhere">+{{ r.alternatives_count }} alt.</span>{% endif %}</div>
+                                </div>
                             </td>
-                            <td><span class="d-block small fw-semibold">{{ r.available_at_display }}</span></td>
-                            <td><span class="d-block small text-muted">{{ r.latest_return_display }}</span></td>
+                            <td>
+                                <span class="when-iso">{{ r.available_at|date:"Y-m-d H:i" }}</span>
+                                {% if r.available_now %}<span class="when-sub now"><span class="now-dot"></span>Available now</span>{% else %}<span class="when-sub">{{ r.available_at|date:"l" }} · {{ r.pickup_in }}</span>{% endif %}
+                            </td>
+                            <td><span class="when-iso">{{ r.latest_return|date:"Y-m-d H:i" }}</span><span class="when-sub">{{ r.latest_return|date:"l" }}</span></td>
                             <td class="col-car-wide">
-                                <span class="small">{{ r.car_model }}</span>
+                                <div class="car-main">{{ r.car.name|default:"Car (model TBA)" }}</div>
+                                <div>{% for t in r.car.tags %}<span class="mini-badge {% if t == 'Electric' or t == 'Plug-in hybrid' %}ev{% endif %}">{{ t }}</span>{% endfor %}{% for n in r.car.notes %}<span class="mini-badge warn">{{ n }}</span>{% endfor %}</div>
                             </td>
-                            <td class="text-end">
-                                {% if r.distance or r.travel_hours %}
-                                    <span class="trip-pill">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %}<span class="text-muted">/</span>{% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</span>
-                                {% endif %}
-                            </td>
+                            <td class="text-end"><span class="trip-pill">{{ r.km }} km<span class="text-muted">·</span>{{ r.duration }}</span></td>
                             <td class="text-center">
                                 {% if r.matches %}
                                     <span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>
@@ -185,25 +197,24 @@
         <!-- Mobile card list (hidden on md+ via CSS) -->
         <div class="live-cards mobile-card-list">
             {% for r in available_routes %}
-            <div class="route-row route-card glass-card {% if r.matches %}has-match{% endif %} {% if r.notified %}notified-row{% endif %} {% if not r.matches %}row-faded{% endif %}">
+            <div class="route-row route-card glass-card {% if r.matches %}has-match{% else %}row-faded{% endif %} {% if r.notified %}notified-row{% endif %}" data-route-id="{{ r.id }}">
                 <div class="rc-head d-flex justify-content-between align-items-start">
-                    <div class="rc-locs">
-                        <div class="rc-route"><strong>{{ r.origin }}</strong><span class="arrow">→</span><span class="dest">{{ r.destination }}</span></div>
+                    <div class="rt">
+                        <div class="rt-line">{% route_marker 'origin' %}<strong>{{ r.origin.short }}</strong>{% if r.origin.sub %}<span class="place-sub">{{ r.origin.sub }}</span>{% endif %}{% if r.count > 1 %}<span class="mini-badge twin">×{{ r.count }}</span>{% endif %}</div>
+                        <div class="rt-line">{% route_marker 'destination' %}<span class="dest">{{ r.destination.short }}</span>{% if r.destination.sub %}<span class="place-sub">{{ r.destination.sub }}</span>{% endif %}</div>
                     </div>
-                                        <div class="rc-badges text-end">
-                                                {% if r.distance or r.travel_hours %}
-                                                    <div class="rc-trip small">{% if r.distance %}{{ r.distance|floatformat:0 }} km{% endif %}{% if r.distance and r.travel_hours %} / {% endif %}{% if r.travel_hours %}{{ r.travel_hours }} h{% endif %}</div>
-                                                {% endif %}
-                                                <div class="rc-badge-line">
-                                                    {% if r.matches %}<span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>{% endif %}
-                                                    {% if r.notified %}<span class="badge notified-badge ms-1">🔔</span>{% endif %}
-                                                </div>
-                                        </div>
+                    <div class="rc-badges text-end">
+                        <div class="rc-trip small">{{ r.km }} km / {{ r.duration }}</div>
+                        <div class="rc-badge-line">
+                            {% if r.matches %}<span class="badge match-badge" title="Matches">{{ r.matches|length }}</span>{% endif %}
+                            {% if r.notified %}<span class="badge notified-badge ms-1">{% icon 'bell' 11 %}</span>{% endif %}
+                        </div>
+                    </div>
                 </div>
                 <div class="rc-details mt-2 small">
-                    <div class="rc-field"><span class="lbl">Pickup:</span><span class="val">{{ r.available_at_display }}</span></div>
-                    <div class="rc-field"><span class="lbl">Return:</span><span class="val">{{ r.latest_return_display }}</span></div>
-                    <div class="rc-field full"><span class="lbl">Car:</span><span class="val">{{ r.car_model }}</span></div>
+                    <div class="rc-field"><span class="lbl">Pick up:</span><span class="val">{{ r.available_at|date:"Y-m-d H:i" }}{% if r.available_now %} (now){% endif %}</span></div>
+                    <div class="rc-field"><span class="lbl">Return by:</span><span class="val">{{ r.latest_return|date:"Y-m-d H:i" }}</span></div>
+                    <div class="rc-field full"><span class="lbl">Car:</span><span class="val">{{ r.car.name|default:"Car (model TBA)" }}</span></div>
                 </div>
             </div>
             {% empty %}
@@ -211,7 +222,7 @@
             {% endfor %}
         </div>
         <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-            <p class="text-muted mb-0 small">Updates on page load (auto-refresh can be added later)</p>
+            <p class="hint-line mb-0">{% icon 'info' 14 %}Click a route for map, pickup instructions and opening hours.</p>
             <button id="scrollTopLive" class="btn btn-light btn-sm">Top</button>
         </div>
         <script>
@@ -246,7 +257,6 @@
                 const btnTop = document.getElementById('scrollTopLive');
                 const search = document.getElementById('liveSearch');
                 const visibleCount = document.getElementById('liveVisibleCount');
-                const wrapper = document.querySelector('.live-table-wrapper');
                 const tableWrapper = document.querySelector('.live-table-wrapper');
                 const cardsWrapper = document.querySelector('.live-cards');
                 // All duplicate rows (table + mobile cards) – used for applying filters to both variants
@@ -286,7 +296,7 @@
                 btnMatches.addEventListener('click', ()=>{ filterMatches = !filterMatches; applyFilters(); });
                 btnNotified.addEventListener('click', ()=>{ filterNotified = !filterNotified; applyFilters(); });
                 btnReset.addEventListener('click', ()=>{ filterMatches=false; filterNotified=false; search.value=''; applyFilters(); });
-                btnTop.addEventListener('click', ()=>{ wrapper.scrollTo({top:0, behavior:'smooth'}); });
+                btnTop.addEventListener('click', ()=>{ tableWrapper.scrollTo({top:0, behavior:'smooth'}); });
                 search.addEventListener('input', applyFilters);
                 applyFilters(); // initial
             })();
@@ -296,10 +306,9 @@
 <!-- Notification history -->
 <div id="tab-notifications" class="dashboard-section {% if active_tab == 'notifications' %}active{% endif %}" role="tabpanel" aria-labelledby="tabbtn-notifications">
     <div class="glass-card p-4 mt-4 mt-md-3">
-        {# History styles moved to external CSS #}
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
             <div>
-                <h5 class="mb-1">Notification history</h5>
+                <h5 class="mb-1 section-title">{% icon 'list' 18 %}Notification history</h5>
                 <div class="meta-line">Showing up to the 50 latest notifications</div>
             </div>
             <div class="history-filters d-flex flex-wrap gap-2 align-items-center">
@@ -320,32 +329,29 @@
                         <th class="col-index" title="Index">#</th>
                         <th>Notified</th>
                         <th>Route</th>
-                        <th>Pickup</th>
-                        <th>Return</th>
+                        <th>Pick up</th>
+                        <th>Return by</th>
                         <th>Car</th>
-                        <th class="text-end">Trip</th>
+                        <th class="text-end">Max km</th>
+                        <th class="text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody id="histBody">
                     {% for n in notified_history %}
-                        <tr class="route-row row-faded" data-notified="{{ n.notified_at|date:'c' }}">
+                        <tr class="route-row {% if not n.row_id %}row-faded{% endif %}" data-notified="{{ n.notified_at|date:'c' }}"{% if n.row_id %} data-route-id="{{ n.row_id }}"{% endif %}>
                             <td class="text-muted small">{{ forloop.counter }}</td>
-                            <td><span class="d-block small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
-                            <td class="cell-route">
-                                <strong>{{ n.pickup_location_name }}</strong><br>
-                                <span class="text-muted">→ {{ n.return_location_name }}</span>
+                            <td><span class="when-iso">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
+                            <td class="cell-route" title="{{ n.pickup_location_name }} → {{ n.return_location_name }}">
+                                <span class="rt-inline">{% route_marker 'origin' %}<strong>{{ n.pickup_short }}</strong></span><span class="rt-inline">{% route_marker 'destination' %}<span>{{ n.return_short }}</span></span>
                             </td>
-                            <td><span class="d-block small">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
-                            <td><span class="d-block small text-muted">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
+                            <td><span class="when-iso">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
+                            <td><span class="when-iso">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
                             <td class="col-car"><span class="small">{{ n.car_type }}</span></td>
-                            <td class="text-end">
-                                {% if n.distance or n.travel_time_hours %}
-                                    <span class="history-pill">{% if n.distance %}{{ n.distance|floatformat:0 }} km{% endif %}{% if n.distance and n.travel_time_hours %}<span class="text-muted">/</span>{% endif %}{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</span>
-                                {% endif %}
-                            </td>
+                            <td class="text-end">{% if n.distance %}<span class="history-pill">{{ n.distance|floatformat:0 }} km</span>{% endif %}</td>
+                            <td class="text-center">{% if n.row_id %}<span class="badge match-badge">Listed</span>{% else %}<span class="badge bg-secondary">Gone</span>{% endif %}</td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="7" class="text-muted">No notifications yet.</td></tr>
+                        <tr><td colspan="8" class="text-muted">No notifications yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -353,15 +359,15 @@
         <!-- Mobile history cards -->
         <div class="history-cards mobile-card-list">
             {% for n in notified_history %}
-            <div class="history-card glass-card route-row row-faded" data-notified="{{ n.notified_at|date:'c' }}">
+            <div class="history-card glass-card route-row {% if not n.row_id %}row-faded{% endif %}" data-notified="{{ n.notified_at|date:'c' }}"{% if n.row_id %} data-route-id="{{ n.row_id }}"{% endif %}>
                 <div class="hc-head d-flex justify-content-between">
                     <div class="hc-time small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</div>
-                    {% if n.distance or n.travel_time_hours %}<div class="hc-trip small text-end">{% if n.distance %}{{ n.distance|floatformat:0 }} km{% endif %}{% if n.distance and n.travel_time_hours %} / {% endif %}{% if n.travel_time_hours %}{{ n.travel_time_hours }} h{% endif %}</div>{% endif %}
+                    {% if n.distance %}<div class="hc-trip small text-end">{{ n.distance|floatformat:0 }} km</div>{% endif %}
                 </div>
-                <div class="hc-route mt-1"><strong>{{ n.pickup_location_name }}</strong><span class="arrow">→</span><span class="dest">{{ n.return_location_name }}</span></div>
+                <div class="hc-route mt-1"><span class="rt-inline">{% route_marker 'origin' %}<strong>{{ n.pickup_short }}</strong></span><span class="rt-inline">{% route_marker 'destination' %}<span class="dest">{{ n.return_short }}</span></span></div>
                 <div class="hc-times mt-2 small">
-                    {% if n.available_at %}<div><span class="lbl">Pickup:</span> {{ n.available_at|date:"Y-m-d H:i" }}</div>{% endif %}
-                    {% if n.latest_return %}<div><span class="lbl">Return:</span> {{ n.latest_return|date:"Y-m-d H:i" }}</div>{% endif %}
+                    {% if n.available_at %}<div><span class="lbl">Pick up:</span> {{ n.available_at|date:"Y-m-d H:i" }}</div>{% endif %}
+                    {% if n.latest_return %}<div><span class="lbl">Return by:</span> {{ n.latest_return|date:"Y-m-d H:i" }}</div>{% endif %}
                 </div>
                 <div class="hc-car mt-2 small">{{ n.car_type }}</div>
             </div>
@@ -392,7 +398,7 @@
                         .concat(Array.from(document.querySelectorAll('.history-cards .history-card')));
                     rows.forEach(el => {
                         if(!el.dataset.notified) return;
-                        const text = el.innerText.toLowerCase();
+                        const text = (el.innerText + ' ' + (el.querySelector('[title]')?.title || '')).toLowerCase();
                         let show = true;
                         if(term){ show = text.indexOf(term) !== -1; }
                         if(show && limit !== 'all'){
@@ -404,7 +410,7 @@
                             }
                         }
                         el.style.display = show ? '' : 'none';
-                        if(show) visible++;
+                        if(show && el.tagName === 'TR') visible++;
                     });
                     count.textContent = visible;
                 }
@@ -416,6 +422,27 @@
         </script>
     </div>
 </div>
+
+<!-- Route details (opened by clicking a route in the table, a mobile card or a listed notification) -->
+<div class="modal fade glass-modal" id="routeModal" tabindex="-1" aria-hidden="true" aria-labelledby="routeModalTitle">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div><div class="modal-title" id="routeModalTitle"></div><div class="modal-sub" id="routeModalSub"></div></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-lg-7"><div id="routeMap" class="route-map"></div><div class="map-tools" id="routeMapTools"></div></div>
+                    <div class="col-lg-5"><div class="facts" id="routeFacts"></div><div class="mt-3" id="routeCar"></div><div id="routeAlternatives"></div></div>
+                </div>
+                <div class="row g-3 mt-1" id="routeLocations"></div>
+            </div>
+            <div class="modal-footer" id="routeFooter"></div>
+        </div>
+    </div>
+</div>
+{{ route_details|json_script:"route-details-data" }}
 
 <!-- Mobile tab switching script -->
 <script>
@@ -435,4 +462,8 @@
     if(mq.matches){ activate('tab-{{ active_tab|default:"live" }}'); }
     })();
 </script>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="{% static 'scheduler/js/route-details.js' %}"></script>
 {% endblock %}

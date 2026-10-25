@@ -226,7 +226,7 @@
   // Keep A and B clear of the floating panels (side by side on wide screens, panel at the bottom on phones)
   const padding = () => wide()
     ? { paddingTopLeft: [470, 70], paddingBottomRight: [330, 50] }
-    : { paddingTopLeft: [40, 70], paddingBottomRight: [100, window.innerHeight * .62] };
+    : { paddingTopLeft: [40, 70], paddingBottomRight: [150, window.innerHeight * .62] };
 
   // Step 1 → A, step 2 → the route, step 3 → B; clicking A or B on the map scrolls to that step
   function focus(target, scrollPanel, animate = true) {

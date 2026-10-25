@@ -169,7 +169,7 @@
                             </td>
                             <td><span class="when-iso">{{ r.latest_return|date:"Y-m-d H:i" }}</span><span class="when-sub">{{ r.latest_return|date:"l" }}</span></td>
                             <td class="col-car-wide">
-                                <div class="car-main">{{ r.car.name|default:"Car (model TBA)" }}</div>
+                                <div class="car-main">{{ r.car.name|default:"Car (model TBA)" }}{% if r.car.spec %} <span class="car-spec">{{ r.car.spec }}</span>{% endif %}</div>
                                 <div>{% for t in r.car.tags %}<span class="mini-badge {% if t == 'Electric' or t == 'Plug-in hybrid' %}ev{% endif %}">{{ t }}</span>{% endfor %}{% for n in r.car.notes %}<span class="mini-badge warn">{{ n }}</span>{% endfor %}</div>
                             </td>
                             <td class="text-end"><span class="trip-pill">{{ r.km }} km<span class="text-muted">·</span>{{ r.duration }}</span></td>
@@ -214,7 +214,7 @@
                 <div class="rc-details mt-2 small">
                     <div class="rc-field"><span class="lbl">Pick up:</span><span class="val">{{ r.available_at|date:"Y-m-d H:i" }}{% if r.available_now %} (now){% endif %}</span></div>
                     <div class="rc-field"><span class="lbl">Return by:</span><span class="val">{{ r.latest_return|date:"Y-m-d H:i" }}</span></div>
-                    <div class="rc-field full"><span class="lbl">Car:</span><span class="val">{{ r.car.name|default:"Car (model TBA)" }}</span></div>
+                    <div class="rc-field full"><span class="lbl">Car:</span><span class="val">{{ r.car.name|default:"Car (model TBA)" }}{% if r.car.spec %} <span class="car-spec">{{ r.car.spec }}</span>{% endif %}</span></div>
                 </div>
             </div>
             {% empty %}
@@ -349,7 +349,7 @@
                             </td>
                             <td><span class="when-iso">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
                             <td><span class="when-iso">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
-                            <td class="col-car"><span class="small">{{ n.car_type }}</span></td>
+                            <td class="col-car"><span class="car-main">{{ n.car.name|default:n.car_type }}</span>{% if n.car.spec %} <span class="car-spec">{{ n.car.spec }}</span>{% endif %}</td>
                             <td class="text-end">{% if n.distance %}<span class="history-pill">{{ n.distance|floatformat:0 }} km</span>{% endif %}</td>
                             <td class="text-center">{% if n.row_id %}<span class="badge match-badge">Listed</span>{% else %}<span class="badge bg-secondary">Gone</span>{% endif %}</td>
                         </tr>
@@ -372,7 +372,7 @@
                     {% if n.available_at %}<div><span class="lbl">Pick up:</span> {{ n.available_at|date:"Y-m-d H:i" }}</div>{% endif %}
                     {% if n.latest_return %}<div><span class="lbl">Return by:</span> {{ n.latest_return|date:"Y-m-d H:i" }}</div>{% endif %}
                 </div>
-                <div class="hc-car mt-2 small">{{ n.car_type }}</div>
+                <div class="hc-car mt-2 small">{{ n.car.name|default:n.car_type }}{% if n.car.spec %} <span class="car-spec">{{ n.car.spec }}</span>{% endif %}</div>
             </div>
             {% empty %}
             <div class="text-muted small mt-2">No notifications yet.</div>

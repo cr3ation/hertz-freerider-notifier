@@ -123,7 +123,7 @@ NOTE_TRANSLATIONS = (
 
 
 def car_details(model, description='', information=''):
-    """Readable car name and tags from a fleet code like 'VOLVO XC40 B3 FWD AUT PLUS DAR'."""
+    """Readable car name, the rest of the fleet code and tags from e.g. 'VOLVO XC40 B3 FWD AUT PLUS DAR'."""
     raw = (model or '').strip()
     tokens = raw.upper().split()
     notes, electric_note = [], False
@@ -137,7 +137,7 @@ def car_details(model, description='', information=''):
         notes.append(next((label for pattern, label in NOTE_TRANSLATIONS if pattern.search(text)), text))
 
     if len(tokens) < 2:  # "Personbil" = model not announced
-        return {'name': '', 'raw': raw, 'tags': ['Electric'] if electric_note else [], 'van': False, 'notes': notes}
+        return {'name': '', 'spec': '', 'raw': raw, 'tags': ['Electric'] if electric_note else [], 'van': False, 'notes': notes}
 
     brand = BRANDS.get(tokens[0], tokens[0].title())
     name_tokens = []
@@ -168,6 +168,8 @@ def car_details(model, description='', information=''):
         tags.append(f'{seats.group(1)} seats')
     return {
         'name': f"{brand} {' '.join(name_tokens)}".strip(),
+        # Everything after brand and model, as Hertz wrote it ('B3 FWD AUT PLUS DAR')
+        'spec': ' '.join(raw.split()[1 + len(name_tokens):]),
         'raw': raw,
         'tags': tags,
         'van': bool(VAN_WORDS.search(joined)),

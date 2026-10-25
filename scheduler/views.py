@@ -23,7 +23,7 @@ from django.urls import reverse
 from django.utils import timezone
 from .forms import SavedSearchForm
 from .models import SavedSearch, NotifiedRide
-from .presentation import build_routes, location_names, location_search_text, is_airport
+from .presentation import build_routes, car_details, location_names, location_search_text, is_airport
 from .utils import fetch_routes, fetch_location_names
 
 @login_required
@@ -92,6 +92,7 @@ def dashboard(request):
             'available_at': n.available_at,
             'latest_return': n.latest_return,
             'car_type': n.car_type,
+            'car': car_details(n.car_type),
             'distance': n.distance,
             'row_id': row_for_ride.get(n.ride_id),
         })

@@ -156,11 +156,11 @@
                 </thead>
                 <tbody>
                     {% for r in available_routes %}
-                        <tr class="route-row {% if r.matches %}has-match{% else %}row-faded{% endif %} {% if r.notified %}notified-row{% endif %}" data-route-id="{{ r.id }}">
+                        <tr class="route-row {% if r.matches %}has-match{% else %}row-faded{% endif %} {% if r.notified %}notified-row{% endif %}" data-route-id="{{ r.id }}" data-search="{{ r.search }}">
                             <td class="cell-locations">
                                 <div class="rt">
-                                    <div class="rt-line">{% route_marker 'origin' %}<span class="place-main">{{ r.origin.short }}</span>{% if r.origin.sub %}<span class="place-sub">{{ r.origin.sub }}</span>{% endif %}{% if r.count > 1 %}<span class="mini-badge twin" title="{{ r.count }} identical cars">×{{ r.count }}</span>{% endif %}</div>
-                                    <div class="rt-line">{% route_marker 'destination' %}<span class="place-main">{{ r.destination.short }}</span>{% if r.destination.sub %}<span class="place-sub">{{ r.destination.sub }}</span>{% endif %}{% if r.alternatives_count %}<span class="mini-badge alt" title="The same car can also be returned elsewhere">+{{ r.alternatives_count }} alt.</span>{% endif %}</div>
+                                    <div class="rt-line">{% route_marker 'origin' %}<span class="place-main">{{ r.origin.short }}</span>{% airport_icon r.origin.airport %}{% if r.origin.sub %}<span class="place-sub">{{ r.origin.sub }}</span>{% endif %}{% if r.count > 1 %}<span class="mini-badge twin" title="{{ r.count }} identical cars">×{{ r.count }}</span>{% endif %}</div>
+                                    <div class="rt-line">{% route_marker 'destination' %}<span class="place-main">{{ r.destination.short }}</span>{% airport_icon r.destination.airport %}{% if r.destination.sub %}<span class="place-sub">{{ r.destination.sub }}</span>{% endif %}{% if r.alternatives_count %}<span class="mini-badge alt" title="The same car can also be returned elsewhere">+{{ r.alternatives_count }} alt.</span>{% endif %}</div>
                                 </div>
                             </td>
                             <td>
@@ -197,11 +197,11 @@
         <!-- Mobile card list (hidden on md+ via CSS) -->
         <div class="live-cards mobile-card-list">
             {% for r in available_routes %}
-            <div class="route-row route-card glass-card {% if r.matches %}has-match{% else %}row-faded{% endif %} {% if r.notified %}notified-row{% endif %}" data-route-id="{{ r.id }}">
+            <div class="route-row route-card glass-card {% if r.matches %}has-match{% else %}row-faded{% endif %} {% if r.notified %}notified-row{% endif %}" data-route-id="{{ r.id }}" data-search="{{ r.search }}">
                 <div class="rc-head d-flex justify-content-between align-items-start">
                     <div class="rt">
-                        <div class="rt-line">{% route_marker 'origin' %}<strong>{{ r.origin.short }}</strong>{% if r.origin.sub %}<span class="place-sub">{{ r.origin.sub }}</span>{% endif %}{% if r.count > 1 %}<span class="mini-badge twin">×{{ r.count }}</span>{% endif %}</div>
-                        <div class="rt-line">{% route_marker 'destination' %}<span class="dest">{{ r.destination.short }}</span>{% if r.destination.sub %}<span class="place-sub">{{ r.destination.sub }}</span>{% endif %}</div>
+                        <div class="rt-line">{% route_marker 'origin' %}<strong>{{ r.origin.short }}</strong>{% airport_icon r.origin.airport %}{% if r.origin.sub %}<span class="place-sub">{{ r.origin.sub }}</span>{% endif %}{% if r.count > 1 %}<span class="mini-badge twin">×{{ r.count }}</span>{% endif %}</div>
+                        <div class="rt-line">{% route_marker 'destination' %}<span class="dest">{{ r.destination.short }}</span>{% airport_icon r.destination.airport %}{% if r.destination.sub %}<span class="place-sub">{{ r.destination.sub }}</span>{% endif %}</div>
                     </div>
                     <div class="rc-badges text-end">
                         <div class="rc-trip small">{{ r.km }} km / {{ r.duration }}</div>
@@ -273,7 +273,7 @@
                 let filterMatches = false, filterNotified = false;
 
                 function applyFilters(){
-                    const term = search.value.trim().toLowerCase();
+                    const term = search.value.trim().replace(/\s+/g, ' ').toLowerCase();
                     // Apply filtering to ALL rows (table + hidden/mobile duplicate) so that switching layout keeps state
                     allRows().forEach(r => {
                         const isMatch = r.classList.contains('has-match');
@@ -282,7 +282,8 @@
                         if(filterMatches) show = show && isMatch;
                         if(filterNotified) show = show && isNotified;
                         if(term){
-                            const txt = r.innerText.toLowerCase();
+                            // data-search holds the full station names too ("Stockholm Centralstation", "Stockholm Arlanda Airport")
+                            const txt = ((r.dataset.search || '') + ' | ' + r.innerText).toLowerCase();
                             show = show && txt.indexOf(term) !== -1;
                         }
                         r.style.display = show ? '' : 'none';
@@ -340,11 +341,11 @@
                 </thead>
                 <tbody id="histBody">
                     {% for n in notified_history %}
-                        <tr class="route-row {% if not n.row_id %}row-faded{% endif %}" data-notified="{{ n.notified_at|date:'c' }}"{% if n.row_id %} data-route-id="{{ n.row_id }}"{% endif %}>
+                        <tr class="route-row {% if not n.row_id %}row-faded{% endif %}" data-notified="{{ n.notified_at|date:'c' }}" data-search="{{ n.search }}"{% if n.row_id %} data-route-id="{{ n.row_id }}"{% endif %}>
                             <td class="text-muted small">{{ forloop.counter }}</td>
                             <td><span class="when-iso">{{ n.notified_at|date:"Y-m-d H:i" }}</span></td>
                             <td class="cell-route" title="{{ n.pickup_location_name }} → {{ n.return_location_name }}">
-                                <span class="rt-inline">{% route_marker 'origin' %}<strong>{{ n.pickup_short }}</strong></span><span class="rt-inline">{% route_marker 'destination' %}<span>{{ n.return_short }}</span></span>
+                                <span class="rt-inline">{% route_marker 'origin' %}<strong>{{ n.pickup_short }}</strong>{% airport_icon n.pickup_airport %}</span><span class="rt-inline">{% route_marker 'destination' %}<span>{{ n.return_short }}</span>{% airport_icon n.return_airport %}</span>
                             </td>
                             <td><span class="when-iso">{% if n.available_at %}{{ n.available_at|date:"Y-m-d H:i" }}{% endif %}</span></td>
                             <td><span class="when-iso">{% if n.latest_return %}{{ n.latest_return|date:"Y-m-d H:i" }}{% endif %}</span></td>
@@ -361,12 +362,12 @@
         <!-- Mobile history cards -->
         <div class="history-cards mobile-card-list">
             {% for n in notified_history %}
-            <div class="history-card glass-card route-row {% if not n.row_id %}row-faded{% endif %}" data-notified="{{ n.notified_at|date:'c' }}"{% if n.row_id %} data-route-id="{{ n.row_id }}"{% endif %}>
+            <div class="history-card glass-card route-row {% if not n.row_id %}row-faded{% endif %}" data-notified="{{ n.notified_at|date:'c' }}" data-search="{{ n.search }}"{% if n.row_id %} data-route-id="{{ n.row_id }}"{% endif %}>
                 <div class="hc-head d-flex justify-content-between">
                     <div class="hc-time small fw-semibold">{{ n.notified_at|date:"Y-m-d H:i" }}</div>
                     {% if n.distance %}<div class="hc-trip small text-end">{{ n.distance|floatformat:0 }} km</div>{% endif %}
                 </div>
-                <div class="hc-route mt-1"><span class="rt-inline">{% route_marker 'origin' %}<strong>{{ n.pickup_short }}</strong></span><span class="rt-inline">{% route_marker 'destination' %}<span class="dest">{{ n.return_short }}</span></span></div>
+                <div class="hc-route mt-1"><span class="rt-inline">{% route_marker 'origin' %}<strong>{{ n.pickup_short }}</strong>{% airport_icon n.pickup_airport %}</span><span class="rt-inline">{% route_marker 'destination' %}<span class="dest">{{ n.return_short }}</span>{% airport_icon n.return_airport %}</span></div>
                 <div class="hc-times mt-2 small">
                     {% if n.available_at %}<div><span class="lbl">Pick up:</span> {{ n.available_at|date:"Y-m-d H:i" }}</div>{% endif %}
                     {% if n.latest_return %}<div><span class="lbl">Return by:</span> {{ n.latest_return|date:"Y-m-d H:i" }}</div>{% endif %}
@@ -392,7 +393,7 @@
                 const wrapper = document.querySelector('.history-wrapper');
 
                 function apply(){
-                    const term = q.value.trim().toLowerCase();
+                    const term = q.value.trim().replace(/\s+/g, ' ').toLowerCase();
                     const now = new Date();
                     let visible = 0;
                     const limit = selTime.value;
@@ -400,7 +401,7 @@
                         .concat(Array.from(document.querySelectorAll('.history-cards .history-card')));
                     rows.forEach(el => {
                         if(!el.dataset.notified) return;
-                        const text = (el.innerText + ' ' + (el.querySelector('[title]')?.title || '')).toLowerCase();
+                        const text = ((el.dataset.search || '') + ' | ' + el.innerText).toLowerCase();
                         let show = true;
                         if(term){ show = text.indexOf(term) !== -1; }
                         if(show && limit !== 'all'){

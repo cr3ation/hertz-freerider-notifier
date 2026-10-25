@@ -312,6 +312,9 @@ body.auth-page nav.navbar { display:none; }
 .rt-ico { width:18px; height:18px; flex:none; display:inline-flex; align-items:center; justify-content:center; }
 .ico-ring { width:11px; height:11px; border-radius:50%; border:2.5px solid #868e96; box-sizing:border-box; }
 .ico-pin { color:#495057; }
+.ico-plane { display:inline-flex; flex-shrink:0; color:#868e96; margin-left:.3rem; }
+.rt-line .ico-plane { margin-left:-.1rem; }
+.glass-modal .modal-title .ico-plane { margin-left:-.3rem; }
 .route-card .rt, .route-card .rt-line { flex:1; min-width:0; }
 .route-card .place-sub { overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .rt-inline { display:inline-flex; align-items:center; gap:.3rem; margin-right:.5rem; }

@@ -30,13 +30,15 @@
     info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
     bolt: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
     plug: '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>',
-    // Tabler Icons "car" and "bus" (MIT)
+    // Tabler Icons "car", "bus" and "plane" (MIT)
     car: '<path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5"/>',
     bus: '<path d="M6 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M18 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M4 17h-2v-11a1 1 0 0 1 1 -1h14a5 7 0 0 1 5 7v5h-2m-4 0h-8"/><path d="M16 5l1.5 7l4.5 0"/><path d="M2 10l15 0"/><path d="M7 5l0 5"/><path d="M12 5l0 5"/>',
+    plane: '<path d="M16 10h4a2 2 0 0 1 0 4h-4l-4 7h-3l2 -7h-4l-2 2h-3l2 -4l-2 -4h3l2 2h4l-2 -7h3z"/>',
   };
   const icon = (name, size, width) =>
     `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${width || 2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name]}</svg>`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const place = (loc, size) => esc(loc.short) + (loc.airport ? `<span class="ico-plane" title="Airport">${icon('plane', size)}</span>` : '');
 
   const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -76,7 +78,7 @@
     if (loc.info.misc) lines.push(['info', 'Good to know', loc.info.misc]);
     return `<div class="locbox">
       <div class="subhead mt-0">${icon(kind === 'pickup' ? 'key' : 'flag', 13)} ${kind === 'pickup' ? 'Pickup' : 'Return'}</div>
-      <div class="ttl">${esc(loc.short)}<small>${esc(loc.sub)}</small></div>
+      <div class="ttl">${place(loc, 15)}<small>${esc(loc.sub)}</small></div>
       <div class="addr">${esc(loc.address)}${loc.city ? ', ' + esc(loc.city) : ''}</div>
       ${accessHtml(loc, when, kind)}<div class="hours">${hoursHtml(loc)}</div>
       ${lines.map(([ic, title, text]) => `<div class="info-line">${icon(ic, 14)}<div><b>${title}</b>${esc(text)}</div></div>`).join('')}
@@ -147,7 +149,7 @@
     if (!r) return;
     current = r;
     const chip = r.availableNow ? '<span class="status-chip open">Available now</span>' : `<span class="status-chip upcoming">Available from ${iso(r.availableAt)}</span>`;
-    $('routeModalTitle').innerHTML = `${esc(r.from.short)} ${icon('arrow', 20)} ${esc(r.to.short)} ${chip}${r.matches.length ? '<span class="badge match-badge">Matches your search</span>' : ''}`;
+    $('routeModalTitle').innerHTML = `${place(r.from, 20)} ${icon('arrow', 20)} ${place(r.to, 20)} ${chip}${r.matches.length ? '<span class="badge match-badge">Matches your search</span>' : ''}`;
     $('routeModalSub').textContent = `${r.from.name} → ${r.to.name}`;
     $('routeFacts').innerHTML = `
       <div class="fact wide"><div class="l">Pick up from</div><div class="v">${iso(r.availableAt)}</div><div class="s">${weekday(r.availableAt)} · ${r.availableNow ? 'available now' : esc(r.pickupIn)}</div></div>

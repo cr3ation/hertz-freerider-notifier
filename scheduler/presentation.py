@@ -300,7 +300,6 @@ def build_routes(raw_data, searches, notified_ids, now):
             'car': car,
             'count': len(members),
             'warnings': warnings,
-            'matches': [f'{s.origin} → {s.destination}' for s in matches],
             'alternatives': [{
                 'id': representative.get(str(r['id']), str(r['id'])),
                 'to': location_names((r.get('returnLocation') or {}).get('name'), (r.get('returnLocation') or {}).get('city'))[0],

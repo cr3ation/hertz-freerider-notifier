@@ -17,6 +17,8 @@ ICONS = {
     'list': '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     'edit': '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
     'trash': '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+    # Tabler Icons "plane" (MIT)
+    'plane': '<path d="M16 10h4a2 2 0 0 1 0 4h-4l-4 7h-3l2 -7h-4l-2 2h-3l2 -4l-2 -4h3l2 2h4l-2 -7h3z"/>',
 }
 
 @register.simple_tag
@@ -29,6 +31,11 @@ def route_marker(kind):
         '<path d="M12 25s-8-7.4-8-14a8 8 0 0 1 16 0c0 6.6-8 14-8 14z" fill="currentColor"/>'
         '<circle cx="12" cy="11" r="3.2" fill="#fff"/></svg></span>'
     )
+
+@register.simple_tag
+def airport_icon(is_airport):
+    """Small grey plane after airport names: {% airport_icon r.destination.airport %}"""
+    return mark_safe(f'<span class="ico-plane" title="Airport">{icon("plane", 14)}</span>') if is_airport else ''
 
 @register.simple_tag
 def icon(name, size=16):

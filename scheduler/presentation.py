@@ -20,6 +20,12 @@ from .utils import wildcard_match
 KIOSK_SUFFIX = re.compile(r'\s*(/|&)?\s*(Self[ -]?Service( Kiosk)?|SSK)\b.*$', re.I)
 AIRPORT_WORDS = {'flygplats', 'airport', 'lufthavn'}
 ABBREVIATIONS = {'AP': 'Airport', 'DT': 'Downtown', 'Flygplats': 'Airport', 'Lufthavn': 'Airport'}
+# Extra spellings for the live filter, so "Stockholm Central" or "Arlanda Airport" finds the station
+SEARCH_SYNONYMS = (
+    (re.compile(r'\b(Flygplats|Lufthavn|AP)\b', re.I), 'Airport'),
+    (re.compile(r'\b(Centralstation|Sentralstasjon)\b', re.I), 'Central Station'),
+    (re.compile(r'\bDT\b'), 'Downtown'),
+)
 
 
 def _clean(text):
@@ -45,6 +51,22 @@ def location_names(name, city=''):
         return f'{head} C', 'Central Station'
     sub = ' '.join([ABBREVIATIONS.get(w, w) for w in rest if w and w != '-'] + parts[1:])
     return head, sub
+
+
+def is_airport(name):
+    words = re.findall(r'\w+', KIOSK_SUFFIX.sub('', name or '').lower())
+    return any(w in AIRPORT_WORDS or w == 'ap' for w in words)
+
+
+def location_search_text(name, city=''):
+    """Every spelling of a station the live filter should find: official, English and short name."""
+    full = re.sub(r'\s*/\s*', ' ', _clean(KIOSK_SUFFIX.sub('', name or '').strip(' /-&,')))
+    english = full
+    for pattern, replacement in SEARCH_SYNONYMS:
+        english = pattern.sub(replacement, english)
+    short, sub = location_names(name, city)
+    variants = [full, english, f'{short} {sub}'.strip(), f'{short} Airport' if is_airport(name) else '', _clean(city)]
+    return ' | '.join(dict.fromkeys(v for v in variants if v))
 
 
 def _opening_hours(location):
@@ -74,6 +96,7 @@ def location_details(location):
         'lat': location.get('geoLat'),
         'lon': location.get('geoLon'),
         'kiosk': bool(location.get('kiosk')),
+        'airport': is_airport(location.get('name')),
         'hours': _opening_hours(location),
         'info': {
             'location': _info(location, 'infoTextLocation'),
@@ -249,6 +272,7 @@ def build_routes(raw_data, searches, notified_ids, now):
             'ride_ids': ride_ids,
             'origin': origin,
             'destination': destination,
+            'search': ' | '.join(location_search_text(loc['name'], loc['city']) for loc in (origin, destination)),
             'count': len(members),
             'alternatives_count': len(alternatives),
             'available_at': available_at,
@@ -276,7 +300,6 @@ def build_routes(raw_data, searches, notified_ids, now):
             'car': car,
             'count': len(members),
             'warnings': warnings,
-            'matches': [f'{s.origin} → {s.destination}' for s in matches],
             'alternatives': [{
                 'id': representative.get(str(r['id']), str(r['id'])),
                 'to': location_names((r.get('returnLocation') or {}).get('name'), (r.get('returnLocation') or {}).get('city'))[0],

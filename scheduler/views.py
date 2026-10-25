@@ -23,7 +23,7 @@ from django.urls import reverse
 from django.utils import timezone
 from .forms import SavedSearchForm
 from .models import SavedSearch, NotifiedRide
-from .presentation import build_routes, location_names
+from .presentation import build_routes, location_names, location_search_text, is_airport
 from .utils import fetch_routes, fetch_location_names
 
 @login_required
@@ -86,6 +86,9 @@ def dashboard(request):
             'return_location_name': n.return_location_name,
             'pickup_short': location_names(n.pickup_location_name)[0],
             'return_short': location_names(n.return_location_name)[0],
+            'pickup_airport': is_airport(n.pickup_location_name),
+            'return_airport': is_airport(n.return_location_name),
+            'search': ' | '.join(location_search_text(name) for name in (n.pickup_location_name, n.return_location_name)),
             'available_at': n.available_at,
             'latest_return': n.latest_return,
             'car_type': n.car_type,

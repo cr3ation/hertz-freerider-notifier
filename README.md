@@ -7,6 +7,7 @@ A Django & Celery app that watches [Hertz Freerider](https://www.hertzfreerider.
 * **Saved searches** with origin, destination and dates (`*` as wildcard), one notification per ride.
 * **Live availability** of all current routes: pickup and return times, car model with full fleet code, distance and matches.
 * **Route details** on a map, with the trip as three steps (pick up, drive, return) and every destination the same car can go to.
+* **All routes on a map** via the Map button. Pick a route to see its steps.
 * **Notification history** and a mobile-friendly layout.
 * **Dockerized:** PostgreSQL, Redis, Celery worker & beat.
 

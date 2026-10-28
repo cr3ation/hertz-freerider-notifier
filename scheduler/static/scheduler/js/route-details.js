@@ -4,6 +4,9 @@
  * Bootstrap modal that is a full-window Leaflet map (A = pickup, B = return) with floating glass panels:
  * the trip as three steps on the left (pick up, drive, return) and every destination the same car can
  * be returned to on the right. Steps and map are linked: a step zooms the map, A/B scrolls to the step.
+ * The "Map" button opens the same window as an overview of every route visible in the table; picking one
+ * shows its steps while the list of all routes stays on the right. Clicking a station shows a station card
+ * with the routes from and to it. Arrows on the lines show each route's direction.
  * Data comes from the view as JSON (json_script "route-details-data"), keyed by route id.
  */
 (function () {
@@ -19,6 +22,7 @@
     key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
     route: '<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>',
     split: '<path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.2-2.9L3 3"/><path d="m15 9 6-6"/>',
+    map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
     maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
     x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
@@ -79,12 +83,11 @@
   // Hertz instructions, folded to three lines until clicked
   function infoHtml(loc, kind) {
     const lines = [];
-    if (kind === 'pickup') {
+    if (kind !== 'return') {
       if (loc.info.location) lines.push(['key', 'Key', loc.info.location]);
       if (loc.info.parking) lines.push(['parking', 'Car is parked', loc.info.parking]);
-    } else if (loc.info.return) {
-      lines.push(['door', 'Return', loc.info.return]);
     }
+    if (kind !== 'pickup' && loc.info.return) lines.push(['door', 'Return', loc.info.return]);
     if (loc.info.misc) lines.push(['info', 'Good to know', loc.info.misc]);
     return lines.map(([ic, title, text]) => `<div class="info-line">${icon(ic, 14)}<div><b>${title}</b><div class="rm-clamp" title="Click to show all">${esc(text)}</div></div></div>`).join('');
   }
@@ -128,6 +131,7 @@
     const showOnMap = target => `<button type="button" data-focus="${target}">${icon('pin', 11, 2.4)} Show on map</button>`;
     const others = destinations(r).filter(o => o.id !== r.id);
     $('routeHead').innerHTML = `
+      ${overview ? `<button type="button" class="rm-back" data-zoom="overview">← All routes</button>` : ''}
       <div class="rm-kick">${icon('route', 12)} Your trip</div>
       <div class="rm-title" id="routeModalTitle">${place(r.from, 17)} ${icon('arrow', 17)} ${place(r.to, 17)}</div>
       <div class="rm-chips">${r.availableNow ? '<span class="status-chip open">Available now</span>' : `<span class="status-chip upcoming">From ${iso(r.availableAt)} · ${esc(r.pickupIn)}</span>`}${r.count > 1 ? `<span class="mini-badge twin">×${r.count} identical</span>` : ''}</div>`;
@@ -156,12 +160,104 @@
       <a class="btn btn-outline-light btn-sm" href="${directionsUrl(r.from, r.to)}" target="_blank" rel="noopener">${icon('nav', 13)} Directions</a>
       <a class="btn btn-primary btn-sm fw-bold" href="${BOOK_URL}" target="_blank" rel="noopener">Book on Hertz ${icon('external', 13)}</a>`;
     const options = destinations(r);
+    updateTools(options.length > 1);
+    if (overview) {
+      $('routeDestinations').innerHTML = overviewListHtml(r.id);
+      return;
+    }
     $('routeDestinations').innerHTML = `
       <div class="rm-kick">${icon('split', 12)} Where this car can go</div>
       <h4>${options.length > 1 ? `${options.length} destinations from ${esc(r.from.short)}` : `Only ${esc(r.to.short)}`}</h4>
       ${options.map(o => destinationHtml(o, r)).join('')}
       <div class="hint">${options.length > 1 ? 'Hover to preview on the map, click to switch.' : 'The car is only offered to this destination.'}</div>`;
-    $('routeTools').querySelector('[data-zoom="all"]').hidden = options.length < 2;
+  }
+
+  // Overview: every route visible in the table (or all of them), in table order
+  let overview = null;
+  const overviewIds = () => (overview.showAll ? overview.all : overview.visible);
+
+  function overviewListHtml(selectedId) {
+    const ids = overviewIds(), filtered = overview.visible.length < overview.all.length;
+    const toggle = filtered
+      ? `<button type="button" class="rm-link" data-show-all>${overview.showAll ? `Only the ${overview.visible.length} filtered` : `Show all ${overview.all.length}`}</button>` : '';
+    return `
+      <div class="rm-kick">${icon('map', 12)} All available routes</div>
+      <h4>${ids.length < overview.all.length ? `${ids.length} of ${overview.all.length} routes` : `${ids.length} routes`} ${toggle}</h4>
+      ${ids.map(id => routeItemHtml(id, selectedId)).join('')}
+      <div class="hint">Hover to preview on the map, click a route or a station.</div>`;
+  }
+
+  function routeItemHtml(id, selectedId) {
+    const r = ROUTES[id];
+    return `<a class="rm-dest-item ${id === selectedId ? 'on' : ''}" href="#route-${esc(id)}" data-route-id="${esc(id)}" data-line="${esc(id)}">
+      <span class="dot"></span>
+      <span><span class="name">${place(r.from, 12)}<span class="to">→</span>${place(r.to, 12)}</span><span class="meta">by ${iso(r.latestReturn)} · ${esc(r.car.name || 'Model TBA')}</span></span>
+      <span class="km">${r.km} km<span class="meta">${esc(r.duration)}</span></span></a>`;
+  }
+
+  // Station card: what the station offers and every listed route from and to it
+  let stations = new Map(), station = null;
+  function showStation(key) {
+    const st = stations.get(key);
+    if (!st) return;
+    station = key;
+    const loc = st.loc;
+    modalEl.classList.remove('is-overview');
+    const access = loc.kiosk
+      ? `<span class="access ok">${icon('key', 13)} Key kiosk – pick up and return 24/7</span>`
+      : `<span class="access no">${icon('clock', 13)} No kiosk – staffed hours only</span>`;
+    const section = (title, ids) => `<div class="rm-k rm-station-k">${title} · ${ids.length}</div>`
+      + (ids.length ? ids.map(id => routeItemHtml(id, null)).join('') : '<div class="rm-none">None right now</div>');
+    $('routeHead').innerHTML = `
+      <button type="button" class="rm-back" data-zoom="overview">← All routes</button>
+      <div class="rm-kick">${icon('pin', 12)} Station</div>
+      <div class="rm-title" id="routeModalTitle">${place(loc, 17)}</div>
+      <div class="rm-addr">${esc(loc.sub)}${loc.sub && loc.address ? ' · ' : ''}${esc(loc.address)}${loc.city ? ', ' + esc(loc.city) : ''}</div>`;
+    $('routeSteps').innerHTML = `
+      <div class="rm-card mt-0">${access}${hoursHtml(loc)}${infoHtml(loc, 'station')}</div>
+      ${section('Routes from here', st.from)}
+      ${section('Routes to here', st.to)}`;
+    $('routeSteps').scrollTop = 0;
+    $('routeFooter').innerHTML = `
+      <a class="btn btn-outline-light btn-sm" href="${placeUrl(loc)}" target="_blank" rel="noopener">${icon('pin', 13)} Google Maps</a>
+      ${loc.phone ? `<a class="btn btn-outline-light btn-sm" href="tel:${esc(loc.phone.replace(/[^+\d]/g, ''))}" title="${esc(loc.phone)}">${icon('phone', 13)} Call</a>` : ''}`;
+    // Mark the station's routes on the map and zoom to them
+    Object.keys(lines).forEach(id => highlight(id, false));
+    stations.forEach(other => other.marker.setStyle(other === st ? { radius: 8, fillColor: '#ffb347' } : { radius: 5, fillColor: '#343a40' }));
+    st.marker.bringToFront();
+    const points = [ll(loc)];
+    st.from.concat(st.to).forEach(id => { points.push(ll(ROUTES[id].from), ll(ROUTES[id].to)); });
+    map.flyToBounds(L.latLngBounds(points), Object.assign({ maxZoom: 9, duration: .7 }, padding()));
+  }
+
+  // Route / A / B / All destinations belong to a route; "All routes" only exists with the overview
+  function updateTools(hasAlternatives) {
+    const listMode = overview && !current;
+    $('routeTools').querySelectorAll('[data-zoom]').forEach(btn => {
+      const zoom = btn.dataset.zoom;
+      btn.hidden = zoom === 'overview' ? !overview : listMode || (zoom === 'all' && !hasAlternatives);
+    });
+  }
+
+  function openOverview() {
+    const rows = Array.from(document.querySelectorAll('.live-availability-table tbody tr.route-row'));
+    const known = rows.filter(row => ROUTES[row.dataset.routeId]);
+    overview = {
+      all: known.map(row => row.dataset.routeId),
+      visible: known.filter(row => row.style.display !== 'none').map(row => row.dataset.routeId),
+      showAll: false,
+    };
+    showOverview(false);
+  }
+
+  function showOverview(animate) {
+    current = null;
+    station = null;
+    modalEl.classList.add('is-overview', 'has-overview');
+    $('routeDestinations').innerHTML = overviewListHtml(null);
+    $('routeDestinations').scrollTop = 0;
+    updateTools(false);
+    if (modalEl.classList.contains('show')) drawOverview(animate); else modal.show();
   }
 
   function destinationHtml(o, r) {
@@ -173,8 +269,7 @@
 
   // Map
   let map = null, layer = null, current = null, bounds = null, lines = {};
-  function drawMap() {
-    const r = current;
+  function ensureMap() {
     if (!map) {
       map = L.map('routeMap', { zoomControl: false });
       // OSM's tile policy requires a Referer. Django's default "same-origin" Referrer-Policy strips it for
@@ -187,6 +282,11 @@
     }
     map.invalidateSize();
     layer.clearLayers();
+  }
+
+  function drawMap() {
+    const r = current;
+    ensureMap();
     lines = {};
     bounds = null;
     $('routeTools').hidden = !hasCoords(r);
@@ -216,20 +316,79 @@
     bounds = { ab: L.latLngBounds([a, b]), all: L.latLngBounds(points) };
   }
 
+  // A chevron 60 % of the way to the destination, so a return trip's arrow lands elsewhere on the same line.
+  // The angle is taken in projected (Mercator) pixels, which keep their direction at every zoom level.
+  function arrowMarker(r) {
+    const a = map.project(ll(r.from), 0), b = map.project(ll(r.to), 0);
+    const deg = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    const at = map.unproject(a.add(b.subtract(a).multiplyBy(.6)), 0);
+    return L.marker(at, { interactive: false, icon: L.divIcon({ className: '', iconSize: [16, 16], iconAnchor: [8, 8],
+      html: `<div class="rm-arrow" style="transform:rotate(${deg}deg)"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1.5 13 7 2 12.5 5 7z"/></svg></div>` }) });
+  }
+
+  // All routes as thin lines between their stations; each station is one dot
+  let arrows = {};
+  function drawOverview(animate) {
+    ensureMap();
+    lines = {};
+    arrows = {};
+    bounds = null;
+    $('routeTools').hidden = false;
+    const points = [];
+    stations = new Map();
+    overviewIds().forEach(id => {
+      const r = ROUTES[id];
+      if (!hasCoords(r)) return;
+      const a = ll(r.from), b = ll(r.to);
+      points.push(a, b);
+      lines[id] = L.polyline([a, b], { color: '#6c757d', weight: 2, dashArray: '4 6' }).addTo(layer)
+        .bindTooltip(`${esc(r.from.short)} → ${esc(r.to.short)} · ${r.km} km`, { sticky: true })
+        .on('click', () => open(id)).on('mouseover', () => highlight(id, true)).on('mouseout', () => highlight(id, false));
+      arrows[id] = arrowMarker(r).addTo(layer);
+      [[r.from, 'from'], [r.to, 'to']].forEach(([loc, side]) => {
+        const key = `${loc.lat},${loc.lon}`;
+        if (!stations.has(key)) stations.set(key, { loc, from: [], to: [] });
+        stations.get(key)[side].push(id);
+      });
+    });
+    stations.forEach((st, key) => {
+      st.marker = L.circleMarker(ll(st.loc), { radius: 5, color: '#fff', weight: 2, fillColor: '#343a40', fillOpacity: 1 }).addTo(layer)
+        .bindTooltip(`${esc(st.loc.short)} · ${st.from.length} leaving · ${st.to.length} arriving · click for details`)
+        .on('click', () => showStation(key));
+    });
+    if (!points.length) {
+      map.setView([62, 15], 5);
+      return;
+    }
+    bounds = { overview: L.latLngBounds(points) };
+    const options = Object.assign({ maxZoom: 11 }, padding());
+    if (animate) map.flyToBounds(bounds.overview, Object.assign({ duration: .7 }, options)); else map.fitBounds(bounds.overview, options);
+  }
+
   function highlight(id, on) {
     const line = lines[id];
     if (!line) return;
-    line.setStyle(on ? { color: '#ffb347', weight: 5, dashArray: null } : { color: '#6c757d', weight: 2, dashArray: '4 6' });
+    const st = station && stations.get(station);
+    const marked = st && (st.from.includes(id) || st.to.includes(id));
+    line.setStyle(on ? { color: '#ffb347', weight: 5, dashArray: null }
+      : marked ? { color: '#e69a2e', weight: 3, dashArray: null } : { color: '#6c757d', weight: 2, dashArray: '4 6' });
     if (on) line.bringToFront();
+    const arrow = arrows[id] && arrows[id].getElement();
+    if (arrow) arrow.firstChild.classList.toggle('on', !!(on || marked));
   }
 
   // Keep A and B clear of the floating panels (side by side on wide screens, panel at the bottom on phones)
-  const padding = () => wide()
-    ? { paddingTopLeft: [470, 70], paddingBottomRight: [330, 50] }
-    : { paddingTopLeft: [40, 70], paddingBottomRight: [150, window.innerHeight * .62] };
+  // (the overview has no labels, so it needs no room for them on the right)
+  const padding = () => {
+    const listOnly = modalEl.classList.contains('is-overview');
+    return wide()
+      ? { paddingTopLeft: [listOnly ? 40 : 470, 70], paddingBottomRight: [overview ? 380 : 330, 50] }
+      : { paddingTopLeft: [40, 70], paddingBottomRight: [listOnly ? 40 : 150, window.innerHeight * .62] };
+  };
 
   // Step 1 → A, step 2 → the route, step 3 → B; clicking A or B on the map scrolls to that step
   function focus(target, scrollPanel, animate = true) {
+    if (target === 'overview') return current || station ? showOverview(true) : drawOverview(true);
     $('routeTools').querySelectorAll('[data-zoom]').forEach(btn => btn.classList.toggle('on', btn.dataset.zoom === target));
     $('routeSteps').querySelectorAll('.rm-step').forEach(s => s.classList.toggle('on', s.dataset.step === target));
     if (scrollPanel) {
@@ -256,6 +415,8 @@
     const r = ROUTES[id];
     if (!r) return;
     current = r;
+    station = null;
+    modalEl.classList.remove('is-overview');
     render(r);
     if (modalEl.classList.contains('show')) show(true); else modal.show();
   }
@@ -264,8 +425,25 @@
     <button type="button" data-zoom="ab">${icon('route', 13)}<span>Route</span></button>
     <button type="button" data-zoom="a">A<span> · Pickup</span></button>
     <button type="button" data-zoom="b">B<span> · Return</span></button>
-    <button type="button" data-zoom="all">${icon('maximize', 13)}<span>All destinations</span></button>`;
-  modalEl.addEventListener('shown.bs.modal', () => show(false));
+    <button type="button" data-zoom="all">${icon('maximize', 13)}<span>All destinations</span></button>
+    <button type="button" data-zoom="overview">${icon('map', 13)}<span>All routes</span></button>`;
+  modalEl.addEventListener('shown.bs.modal', () => (current ? show(false) : drawOverview(false)));
+  // Next time a table row is clicked the window opens as plain route details again
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    overview = null;
+    station = null;
+    modalEl.classList.remove('is-overview', 'has-overview');
+  });
+  $('routeHead').addEventListener('click', e => {
+    if (e.target.closest('[data-zoom="overview"]')) showOverview(true);
+  });
+  $('routeDestinations').addEventListener('click', e => {
+    if (!e.target.closest('[data-show-all]')) return;
+    overview.showAll = !overview.showAll;
+    if (current) render(current); else showOverview(true);
+  });
+  const mapButton = document.getElementById('openRouteMap');
+  if (mapButton) mapButton.addEventListener('click', openOverview);
   $('routeTools').addEventListener('click', e => {
     const b = e.target.closest('[data-zoom]');
     if (b) focus(b.dataset.zoom, b.dataset.zoom !== 'all');
@@ -276,13 +454,16 @@
     const clamp = e.target.closest('.rm-clamp');
     if (clamp) clamp.classList.add('open');
   });
-  $('routeDestinations').addEventListener('mouseover', e => {
-    const item = e.target.closest('[data-line]');
-    if (item) highlight(item.dataset.line, true);
-  });
-  $('routeDestinations').addEventListener('mouseout', e => {
-    const item = e.target.closest('[data-line]');
-    if (item && !item.contains(e.relatedTarget)) highlight(item.dataset.line, false);
+  // Hovering a route in a list (right panel or station card) previews its line
+  [$('routeDestinations'), $('routeSteps')].forEach(list => {
+    list.addEventListener('mouseover', e => {
+      const item = e.target.closest('[data-line]');
+      if (item) highlight(item.dataset.line, true);
+    });
+    list.addEventListener('mouseout', e => {
+      const item = e.target.closest('[data-line]');
+      if (item && !item.contains(e.relatedTarget)) highlight(item.dataset.line, false);
+    });
   });
   document.addEventListener('click', e => {
     const target = e.target.closest('[data-route-id]');
@@ -293,4 +474,5 @@
   // Deep link, e.g. /#route-67729 opens that route directly
   const deepLink = location.hash.match(/^#route-(\d+)$/);
   if (deepLink) open(deepLink[1]);
+  else if (location.hash === '#map') openOverview();
 })();

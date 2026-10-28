@@ -129,8 +129,8 @@
                 <button id="toggleShowMatches" class="btn btn-outline-success btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes that match any of your searches">
                     <span class="btn-ico" aria-hidden="true">{% icon 'check' 13 %}</span><span class="btn-text">Matches</span>
                 </button>
-                <button id="toggleShowNotified" class="btn btn-outline-info btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show only routes you've already been notified about">
-                    <span class="btn-ico" aria-hidden="true">{% icon 'bell' 13 %}</span><span class="btn-text">Notified</span>
+                <button id="openRouteMap" class="btn btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Show all routes on a map">
+                    <span class="btn-ico" aria-hidden="true">{% icon 'map' 13 %}</span><span class="btn-text">Map</span>
                 </button>
                 <button id="resetFilters" class="btn btn-outline-secondary btn-sm filter-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Reset search & filters">
                     <span class="btn-ico" aria-hidden="true">{% icon 'refresh' 13 %}</span><span class="btn-text">Reset</span>
@@ -254,7 +254,6 @@
                 initTooltips(15); // ~2.25s max
 
                 const btnMatches = document.getElementById('toggleShowMatches');
-                const btnNotified = document.getElementById('toggleShowNotified');
                 const btnReset = document.getElementById('resetFilters');
                 const btnTop = document.getElementById('scrollTopLive');
                 const search = document.getElementById('liveSearch');
@@ -270,17 +269,15 @@
                     }
                     return Array.from(tableWrapper.querySelectorAll('tbody tr.route-row'));
                 }
-                let filterMatches = false, filterNotified = false;
+                let filterMatches = false;
 
                 function applyFilters(){
                     const term = search.value.trim().replace(/\s+/g, ' ').toLowerCase();
                     // Apply filtering to ALL rows (table + hidden/mobile duplicate) so that switching layout keeps state
                     allRows().forEach(r => {
                         const isMatch = r.classList.contains('has-match');
-                        const isNotified = r.classList.contains('notified-row');
                         let show = true;
                         if(filterMatches) show = show && isMatch;
-                        if(filterNotified) show = show && isNotified;
                         if(term){
                             // data-search holds the full station names too ("Stockholm Centralstation", "Stockholm Arlanda Airport")
                             const txt = ((r.dataset.search || '') + ' | ' + r.innerText).toLowerCase();
@@ -294,11 +291,9 @@
                     const total = activeRows.length;
                     visibleCount.textContent = activeVisible + ' / ' + total;
                     btnMatches.classList.toggle('filter-active', filterMatches);
-                    btnNotified.classList.toggle('filter-active', filterNotified);
                 }
                 btnMatches.addEventListener('click', ()=>{ filterMatches = !filterMatches; applyFilters(); });
-                btnNotified.addEventListener('click', ()=>{ filterNotified = !filterNotified; applyFilters(); });
-                btnReset.addEventListener('click', ()=>{ filterMatches=false; filterNotified=false; search.value=''; applyFilters(); });
+                btnReset.addEventListener('click', ()=>{ filterMatches=false; search.value=''; applyFilters(); });
                 btnTop.addEventListener('click', ()=>{ tableWrapper.scrollTo({top:0, behavior:'smooth'}); });
                 search.addEventListener('input', applyFilters);
                 applyFilters(); // initial

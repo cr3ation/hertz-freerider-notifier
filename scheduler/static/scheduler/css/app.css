@@ -196,68 +196,7 @@ body.auth-page nav.navbar { display:none; }
   .mobile-tabs { gap:.5rem; }
   .dashboard-section { display:none; }
   .dashboard-section.active { display:block; }
-  .live-table-wrapper, .searches-wrapper, .history-wrapper { max-height:380px; }
   .dashboard-grid { grid-template-columns:1fr; }
-}
-
-/* Mobile card layouts (shown only on < md) */
-/* Hidden by default (desktop & tablets >= 769px) */
-.mobile-card-list { display:none; }
-@media (max-width: 768px) {
-  .live-table-wrapper, .history-wrapper, .searches-wrapper { display:none; }
-  .mobile-card-list { display:flex; flex-direction:column; gap:1rem; margin-top:1rem; }
-  .route-card, .history-card { padding:1rem 1.1rem; border-radius:1rem; border:1px solid var(--glass-border-mobile); background:var(--glass-bg-mobile); box-shadow:0 6px 18px -6px rgba(0,0,0,.55); position:relative; }
-  .search-card { padding:.9rem 1rem; border-radius:1rem; border:1px solid var(--glass-border-mobile); background:var(--glass-bg-mobile); box-shadow:0 6px 18px -6px rgba(0,0,0,.55); position:relative; }
-  /* Highlight match card similar to desktop row */
-  .route-card.has-match { background:linear-gradient(135deg,rgba(255,255,255,0.93) 0%, rgba(255,255,255,0.88) 65%); border-color:rgba(255,255,255,0.95); box-shadow:0 4px 14px -6px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,0.35); }
-  .route-card.has-match .lbl { opacity:.72; }
-  .search-card.has-match { background:linear-gradient(135deg,rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.86) 70%); border-color:rgba(255,255,255,0.95); box-shadow:0 3px 12px -5px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,0.35); }
-  .search-card.has-match .lbl { opacity:.72; }
-  .route-card:before, .history-card:before { background:linear-gradient(135deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 55%); }
-  .search-card:before { background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,0) 55%); }
-  .route-card .rc-route, .history-card .hc-route { font-size:.9rem; font-weight:600; letter-spacing:.3px; display:flex; align-items:center; flex-wrap:wrap; gap:.35rem; }
-  .search-card .sc-route { font-size:.85rem; font-weight:600; display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
-  .route-card .rc-route .arrow, .history-card .hc-route .arrow { opacity:.75; }
-  .search-card .sc-route .arrow { opacity:.75; }
-  .route-card .rc-route .dest, .history-card .hc-route .dest { font-weight:500; }
-  .search-card .sc-route .dest { font-weight:500; }
-  .route-card .rc-car, .history-card .hc-car { opacity:.85; }
-  .route-card .rc-times, .history-card .hc-times { display:grid; grid-template-columns:1fr; gap:.15rem; }
-  .route-card .rc-details { display:grid; grid-template-columns:1fr 1fr; gap:.25rem .75rem; }
-  .route-card .rc-details .rc-field { display:flex; flex-direction:column; }
-  .route-card .rc-details .rc-field.full { grid-column:1 / -1; }
-  /* Align live card detail fonts with notification cards */
-  .route-card .rc-details .lbl { font-size:.6rem; letter-spacing:.05em; opacity:.7; text-transform:uppercase; margin:0 0 .05rem; }
-  .route-card .rc-details .val { font-size:inherit; font-weight:500; line-height:1.25; }
-  @media (max-width: 470px) { .route-card .rc-details { grid-template-columns:1fr; } }
-  .search-card .sc-dates { display:grid; gap:.15rem; }
-  .route-card .lbl, .history-card .lbl { text-transform:uppercase; font-size:.6rem; letter-spacing:.05em; opacity:.75; margin-right:.25rem; }
-  .search-card .lbl { text-transform:uppercase; font-size:.6rem; letter-spacing:.05em; opacity:.75; margin-right:.25rem; }
-  .route-card .rc-badges .badge, .history-card .hc-head .hc-trip { font-size:.6rem; }
-  .search-card .sc-badges .badge { font-size:.6rem; }
-  .route-card .trip-pill { margin-top:.15rem; }
-  .route-card .rc-badges { min-width:88px; }
-  .route-card .rc-badges .rc-trip { font-size:.6rem; font-weight:500; margin-bottom:.25rem; opacity:.85; letter-spacing:0; }
-  .route-card.has-match .rc-badges .rc-trip { opacity:.85; }
-  .history-card .hc-head { align-items:flex-start; }
-  .history-card .hc-trip { opacity:.85; }
-  .history-card .hc-route { margin-top:.35rem; }
-  .btn-delete-sm { padding:.25rem .55rem; font-size:.55rem; }
-  /* Strengthen text contrast inside mobile cards */
-  /* Explicit dark text colors to match table styling */
-  .mobile-card-list,
-  .mobile-card-list strong,
-  .mobile-card-list .rc-route, .mobile-card-list .hc-route, .mobile-card-list .sc-route,
-  .mobile-card-list .rc-car, .mobile-card-list .hc-car, .mobile-card-list .sc-dates,
-  .mobile-card-list .rc-times, .mobile-card-list .hc-times { color:#212529; }
-  .mobile-card-list .text-muted { color:rgba(0,0,0,0.55)!important; }
-  .mobile-card-list .lbl { color:rgba(0,0,0,0.60); }
-}
-
-@media (prefers-color-scheme: light) and (max-width: 768px) {
-  .route-card, .history-card { background:rgba(255,255,255,0.65); border-color:rgba(0,0,0,0.08); }
-  .mobile-card-list .text-muted { color:rgba(0,0,0,0.55)!important; }
-  .route-card .rc-route strong, .history-card .hc-route strong { color:#222; }
 }
 
 /* ─────────────────────────────────────────
@@ -285,7 +224,7 @@ body.auth-page nav.navbar { display:none; }
 .live-availability-table tbody tr.has-match td:first-child { box-shadow:inset 3px 0 0 #28a745; }
 .live-availability-table tbody tr.notified-row td:first-child { box-shadow:inset 3px 0 0 #0dcaf0; }
 .live-availability-table tbody tr.route-row:hover td:first-child { box-shadow:inset 3px 0 0 #ffb347; }
-.history-table tbody tr[data-route-id], .route-card { cursor:pointer; }
+.history-table tbody tr[data-route-id] { cursor:pointer; }
 .place-main { font-weight:700; font-size:.92rem; }
 .place-sub { font-size:.72rem; color:#6c757d; white-space:nowrap; }
 .when-iso { font-size:.84rem; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; display:block; }
@@ -310,8 +249,6 @@ body.auth-page nav.navbar { display:none; }
 .ico-pin { color:#495057; }
 .ico-plane { display:inline-flex; flex-shrink:0; color:#868e96; margin-left:.3rem; }
 .rt-line .ico-plane { margin-left:-.1rem; }
-.route-card .rt, .route-card .rt-line { flex:1; min-width:0; }
-.route-card .place-sub { overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .rt-inline { display:inline-flex; align-items:center; gap:.3rem; margin-right:.5rem; }
 .rt-inline .rt-ico { width:16px; height:16px; }
 
@@ -323,7 +260,7 @@ body.auth-page nav.navbar { display:none; }
 .searches-table .date-pill { min-width:0; font-variant-numeric:tabular-nums; }
 .searches-table .indicator-dot { margin-right:.45rem; }
 .icon-actions { display:flex; gap:.3rem; justify-content:flex-end; }
-.icon-actions form, .sc-actions form { margin:0; }
+.icon-actions form { margin:0; }
 .icon-actions .btn-edit, .icon-actions .btn-delete { min-width:0; width:28px; height:28px; padding:0; border-radius:.55rem; }
 
 /* Route details: a full-window map with floating glass panels. The left panel is the trip in three steps
@@ -450,4 +387,69 @@ body.auth-page nav.navbar { display:none; }
 }
 @media (max-width: 768px) {
   .sync-pill { display:none; }
+}
+
+/* Phones: every row of the three lists becomes a card. The tables are the only markup, so desktop and
+   phone always show the same thing; grid areas place the cells, data-label adds "Pick up:" and the like. */
+@media (max-width: 768px) {
+  .live-table-wrapper, .history-wrapper, .searches-wrapper { max-height:none; overflow:visible; border:0; border-radius:0; }
+  .stack-table, .stack-table > tbody { display:block; }
+  .stack-table > thead { display:none; }
+  .stack-table > tbody { display:flex; flex-direction:column; gap:1rem; margin-top:1rem; }
+  .stack-table > tbody > tr { display:grid; gap:.25rem .75rem; align-items:start; padding:1rem 1.1rem; border-radius:1rem; border:1px solid var(--glass-border-mobile); background:linear-gradient(135deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 55%), var(--glass-bg-mobile); backdrop-filter:blur(18px) saturate(180%); -webkit-backdrop-filter:blur(18px) saturate(180%); box-shadow:0 6px 18px -6px rgba(0,0,0,.55); color:#212529; }
+  .stack-table > tbody > tr.row-faded { opacity:1; }
+  .stack-table > tbody > tr.has-match { background:linear-gradient(135deg,rgba(255,255,255,0.93) 0%, rgba(255,255,255,0.88) 65%); border-color:rgba(255,255,255,0.95); box-shadow:0 4px 14px -6px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,0.35); }
+  .stack-table > tbody > tr > td { display:block; min-width:0; padding:0; border:0; white-space:normal; color:inherit; background:none !important; box-shadow:none !important; }
+  .stack-table td[data-label]::before { content:attr(data-label) ':'; display:block; font-size:.6rem; letter-spacing:.05em; text-transform:uppercase; color:rgba(0,0,0,.6); margin-bottom:.05rem; }
+  .stack-table .rt-line { min-width:0; }
+  .stack-table .place-sub { overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  /* Labelled values and the car in normal weight; the weekday and countdown only on desktop, "Available now" stays */
+  .stack-table td[data-label] .when-iso, .stack-table .car-main { font-weight:500; }
+  .stack-table .when-sub { display:none; }
+  .stack-table .cell-pickup .when-iso { display:inline; }
+  .stack-table .cell-pickup .when-sub.now { display:inline; margin-left:.4rem; }
+
+  /* Live: route with trip and badges on the right, then pick up, return by and the car under each other */
+  .live-availability-table > tbody > tr { grid-template-columns:minmax(0,1fr) auto auto; }
+  .live-availability-table .cell-locations { grid-area:1 / 1 / 3 / 2; }
+  .live-availability-table .cell-trip { grid-area:1 / 2 / 2 / 4; justify-self:end; }
+  .live-availability-table .cell-matches { grid-area:2 / 2; justify-self:end; }
+  .live-availability-table .cell-notified { grid-area:2 / 3; justify-self:end; }
+  .live-availability-table .cell-pickup { grid-area:3 / 1 / 4 / 4; margin-top:.35rem; }
+  .live-availability-table .cell-return { grid-area:4 / 1 / 5 / 4; }
+  .live-availability-table .cell-car { grid-area:5 / 1 / 6 / 4; }
+  .live-availability-table .cell-matches .text-muted, .live-availability-table .cell-notified .text-muted { display:none; }
+  .live-availability-table .trip-pill { font-size:.6rem; padding:.1rem .45rem; }
+
+  /* History: notified time and distance, the route, the times and the car */
+  .history-table > tbody > tr { grid-template-columns:minmax(0,1fr) auto; }
+  .history-table .cell-index, .history-table .cell-status { display:none; }
+  .history-table .cell-notified-at { grid-area:1 / 1; }
+  .history-table .cell-km { grid-area:1 / 2; justify-self:end; }
+  .history-table .cell-route { grid-area:2 / 1 / 3 / 3; }
+  .history-table .cell-pickup { grid-area:3 / 1 / 4 / 3; }
+  .history-table .cell-return { grid-area:4 / 1 / 5 / 3; }
+  .history-table .cell-car { grid-area:5 / 1 / 6 / 3; margin-top:.35rem; }
+
+  /* Searches: origin → destination and the match count, then the dates next to edit and delete */
+  .searches-table > tbody > tr { grid-template-columns:auto auto minmax(0,1fr) auto; }
+  .searches-table .cell-origin { grid-area:1 / 1; }
+  .searches-table .cell-dest { grid-area:1 / 2 / 2 / 4; }
+  .searches-table .cell-dest::before { content:'→'; margin-right:.35rem; opacity:.75; }
+  .searches-table .cell-matches { grid-area:1 / 4; justify-self:end; }
+  .searches-table .cell-from { grid-area:2 / 1 / 3 / 4; }
+  .searches-table .cell-to { grid-area:3 / 1 / 4 / 4; }
+  .searches-table .cell-actions { grid-area:2 / 4 / 4 / 5; align-self:end; }
+  .searches-table .cell-matches .text-muted, .searches-table .indicator-dot { display:none; }
+  .searches-table .date-pill { background:none; border:0; padding:0; min-width:0; font-size:.85rem; }
+  .searches-table .loc-text { font-size:.85rem; }
+
+  /* History and searches put the label in front of the value */
+  .history-table td[data-label], .searches-table td[data-label] { display:flex; align-items:baseline; gap:.5rem; }
+  .history-table td[data-label]::before, .searches-table td[data-label]::before { display:inline; margin:0; }
+}
+/* In light mode the live and history cards are mostly white, so the dark text stays readable */
+@media (prefers-color-scheme: light) and (max-width: 768px) {
+  .live-availability-table > tbody > tr, .history-table > tbody > tr { background:linear-gradient(135deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 55%), rgba(255,255,255,0.65); border-color:rgba(0,0,0,0.08); }
+  .live-availability-table > tbody > tr.has-match { background:linear-gradient(135deg,rgba(255,255,255,0.93) 0%, rgba(255,255,255,0.88) 65%); border-color:rgba(255,255,255,0.95); }
 }

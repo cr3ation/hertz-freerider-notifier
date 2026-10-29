@@ -4,6 +4,9 @@
 
 .git
 .gitignore
+.github/
+# Screenshots for the README
+docs/
 __pycache__/
 *.py[cod]
 *.pyo

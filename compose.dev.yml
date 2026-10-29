@@ -1,0 +1,28 @@
+# Development on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f compose.dev.yml up --build
+# The source is mounted (restart app, worker and beat after Python changes), Django's dev server runs with
+# DEBUG=1, and debugpy listens for VS Code's "Python: Remote Attach" on 5678 (app) and 5679 (worker).
+x-dev: &dev
+  build:
+    context: .
+    args:
+      DEV: 1
+  volumes:
+    - .:/code
+
+services:
+  app:
+    <<: *dev
+    environment:
+      DEBUG: 1
+      DEV_SERVER: 1
+    ports:
+      - "${APP_DEBUGPY_PORT:-5678}:5678"
+  worker:
+    <<: *dev
+    environment:
+      DEV_SERVER: 1
+    ports:
+      - "${WORKER_DEBUGPY_PORT:-5679}:5678"
+  beat:
+    <<: *dev

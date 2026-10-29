@@ -19,9 +19,6 @@ until python manage.py shell -c "from django.db import connection; connection.cu
 done
 echo 'Database is ready!'
 
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
-
 if [ "$DEBUG" = "1" ]; then
     echo "Starting Celery Worker with debugpy..."
     echo "Debugger listening on port 5678 (container). Host port is mapped via docker-compose (e.g. 5679:5678)."

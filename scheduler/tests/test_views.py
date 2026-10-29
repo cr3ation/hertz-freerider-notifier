@@ -3,6 +3,7 @@
 from datetime import date
 
 import pytest
+from django.db import IntegrityError
 
 from scheduler.models import NotifiedRide, SavedSearch
 
@@ -119,3 +120,23 @@ def test_delete_own_search(logged_in, user):
 def test_cannot_delete_someone_elses_search(logged_in, other_search):
     assert logged_in.post(f'/delete/{other_search.pk}/').status_code == 404
     assert SavedSearch.objects.filter(pk=other_search.pk).exists()
+
+
+def test_search_dates_must_be_in_order(logged_in, hertz):
+    response = logged_in.post('/', search_form(date_from='2025-09-01', date_to='2025-08-01'))
+    assert response.status_code == 200
+    assert response.context['form'].errors == {'date_to': ['"Date to" must be on or after "Date from".']}
+    assert response.context['active_tab'] == 'searches'
+    assert not SavedSearch.objects.exists()
+
+
+def test_database_refuses_reversed_dates(user):
+    with pytest.raises(IntegrityError):
+        SavedSearch.objects.create(owner=user, **search_form(date_from='2025-09-01', date_to='2025-08-01'))
+
+
+@pytest.mark.parametrize('tab, active', [('notifications', 'notifications'), ("live');alert(1);//", 'live')])
+def test_tab_parameter_only_takes_known_tabs(logged_in, hertz, tab, active):
+    response = logged_in.get('/', {'tab': tab})
+    assert response.context['active_tab'] == active
+    assert b'alert(1)' not in response.content

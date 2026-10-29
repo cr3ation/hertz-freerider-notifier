@@ -10,3 +10,5 @@ STORAGES = {
     'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 }
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+# Tests run with DEBUG off, where the sample SECRET_KEY is refused
+SECRET_KEY = 'test-only-key-not-used-anywhere-else'

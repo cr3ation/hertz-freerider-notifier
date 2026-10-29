@@ -27,6 +27,8 @@ from .models import NotifiedRide, SavedSearch
 from .presentation import build_routes, car_details, is_airport, location_names, location_search_text
 from .utils import fetch_location_names, fetch_routes
 
+TABS = ('live', 'searches', 'notifications')
+
 
 @login_required
 def dashboard(request):
@@ -54,14 +56,16 @@ def dashboard(request):
     available_routes, route_details, search_match_counts = build_routes(raw_data, searches, notified_ids, now)
 
     editing_id = None  # holds the ID of a search currently being edited
-    active_tab = request.GET.get('tab') or 'live'  # which UI tab should be active on initial render
+    # Which UI tab is active on initial render; the value ends up in a script, so only known tabs pass
+    active_tab = request.GET.get('tab') if request.GET.get('tab') in TABS else 'live'
     if request.method == 'POST':
+        # The form lives on the Searches tab; show it there if it comes back with errors
+        active_tab = 'searches'
         # Distinguish between create and update: hidden field 'editing_id' present => update
         editing_id = request.POST.get('editing_id') or None
         if editing_id:
             search_obj = get_object_or_404(SavedSearch, pk=editing_id, owner=request.user)
             form = SavedSearchForm(request.POST, instance=search_obj)
-            active_tab = 'searches'
         else:
             form = SavedSearchForm(request.POST)
         if form.is_valid():

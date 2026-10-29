@@ -11,11 +11,7 @@ until python manage.py shell -c "from django.db import connection; connection.cu
 done
 echo 'Database is ready!'
 
-# Create migrations for all apps
-echo "Creating migrations..."
-python manage.py makemigrations
-
-# Apply migrations
+# Apply migrations (they are created during development and committed, never generated here)
 echo "Applying migrations..."
 python manage.py migrate
 
@@ -28,7 +24,7 @@ username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
 password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
 if not User.objects.filter(username=username).exists():
     User.objects.create_superuser(username, f'{username}@example.com', password)
-    print(f'Superuser created: {username}/{password}')
+    print(f'Superuser created: {username}')
 else:
     print('Superuser already exists')
 "

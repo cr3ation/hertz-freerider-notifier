@@ -1,0 +1,5 @@
+{% load scheduler_extras %}{# Origin → destination as two lines on a dotted line (live table): route = a row from build_routes #}
+<div class="rt">
+    <div class="rt-line">{% route_marker 'origin' %}<span class="place-main">{{ route.origin.short }}</span>{% airport_icon route.origin.airport %}{% if route.origin.sub %}<span class="place-sub">{{ route.origin.sub }}</span>{% endif %}{% if route.count > 1 %}<span class="mini-badge twin" title="{{ route.count }} identical cars">×{{ route.count }}</span>{% endif %}</div>
+    <div class="rt-line">{% route_marker 'destination' %}<span class="place-main">{{ route.destination.short }}</span>{% airport_icon route.destination.airport %}{% if route.destination.sub %}<span class="place-sub">{{ route.destination.sub }}</span>{% endif %}{% if route.alternatives_count %}<span class="mini-badge alt" title="The same car can also be returned elsewhere">+{{ route.alternatives_count }} alt.</span>{% endif %}</div>
+</div>

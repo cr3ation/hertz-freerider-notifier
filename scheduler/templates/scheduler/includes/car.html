@@ -1,0 +1,3 @@
+{# The car: readable name, the rest of the fleet code smaller, then tags and Hertz's notes. car = car_details(); fallback names a car without a model #}
+<div class="car-main">{{ car.name|default:fallback }}{% if car.spec %} <span class="car-spec">{{ car.spec }}</span>{% endif %}</div>
+{% if tags %}<div>{% for t in car.tags %}<span class="mini-badge {% if t == 'Electric' or t == 'Plug-in hybrid' %}ev{% endif %}">{{ t }}</span>{% endfor %}{% for n in car.notes %}<span class="mini-badge warn">{{ n }}</span>{% endfor %}</div>{% endif %}

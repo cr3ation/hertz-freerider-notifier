@@ -99,7 +99,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise configuration (STORAGES replaces STATICFILES_STORAGE, which Django 5.1 removed)
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+    'staticfiles': {'BACKEND': 'hertz_notifier.storage.StaticStorage'},
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

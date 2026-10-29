@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+extend-exclude = ["scheduler/migrations"]
+
+[tool.ruff.lint]
+# pyflakes, pycodestyle, import order, pyupgrade and bugbear
+select = ["F", "E", "W", "I", "UP", "B"]
+
+[tool.ruff.format]
+# The code base uses single quotes; keep quotes as written
+quote-style = "preserve"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "hertz_notifier.test_settings"
+python_files = ["test_*.py"]
+addopts = "-ra"

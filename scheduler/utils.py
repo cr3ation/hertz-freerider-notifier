@@ -1,5 +1,4 @@
 import os, requests, logging, re
-from datetime import datetime
 from django.core.cache import cache
 
 API_URL = 'https://www.hertzfreerider.se/api/transport-routes/?country=SWEDEN'

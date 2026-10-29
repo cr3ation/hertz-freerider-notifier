@@ -1,5 +1,6 @@
 """Dashboard and search management, with the Hertz API mocked."""
 
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -179,3 +180,12 @@ def test_dashboard_uses_the_workers_snapshot(logged_in, monkeypatch, transport_r
     response = logged_in.get('/')
     assert len(response.context['available_routes']) == 82
     assert response.context['updated_at'] == fetched_at
+
+
+def test_each_route_is_rendered_once_and_scripts_are_files(logged_in, hertz):
+    content = logged_in.get('/').content.decode()
+    # One table row per route; phones get the same rows as cards through CSS
+    assert content.count('data-route-id=') == 82
+    inline = re.findall(r'<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>', content)
+    assert inline == []
+    assert 'type="module" src="/static/scheduler/js/route/main.js"' in content

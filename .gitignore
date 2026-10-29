@@ -23,7 +23,7 @@ local_settings.py
 # ─────────────────────────────────────────
 #  Static & media artifacts
 # ─────────────────────────────────────────
-# Output of collectstatic, built when the container starts
+# Output of collectstatic (the Docker image builds its own)
 staticfiles/
 media/
 

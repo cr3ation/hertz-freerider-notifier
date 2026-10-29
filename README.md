@@ -66,7 +66,7 @@ docker compose exec app python manage.py shell -c "from scheduler.tasks import c
 | `DEBUG` | Debug mode (0 or 1) | `0` |
 | `HERTZ_CHECK_INTERVAL` | Seconds between Hertz checks | `120` |
 | `APP_PORT` | Host port for the web app | `8000` |
-| `APP_DEBUGPY_PORT` | Host port for debugpy (when `DEBUG=1`) | `5678` |
+| `APP_DEBUGPY_PORT` / `WORKER_DEBUGPY_PORT` | Host ports for debugpy in the app and the worker (`compose.dev.yml`) | `5678` / `5679` |
 | `DB_NAME` / `DB_USER` / `DB_PASS` | Database name, user and password | `db` / `devuser` / `changeme` |
 | `DB_HOST` / `DB_PORT` | Database host and port | `db` / `5432` |
 | `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `127.0.0.1,localhost` |
@@ -80,17 +80,18 @@ docker compose exec app python manage.py shell -c "from scheduler.tasks import c
 
 ## Production notes
 
-* Use `DEBUG=0`. The app then runs on Gunicorn, and static files get hashed names, so browsers never use stale CSS/JS after a deploy. With `DEBUG=1`, do a hard reload after deploying.
+* Use `DEBUG=0`. With `DEBUG=1`, anyone who hits an error sees Django's debug page, and static files are served under their plain names, so browsers can keep stale CSS/JS after a deploy.
 * Set `SECRET_KEY` to a long random string (`python -c "import secrets; print(secrets.token_urlsafe(50))"`), change `DB_PASS` and the admin password, and restrict `ALLOWED_HOSTS`. With `DEBUG=0` the app refuses to start while `SECRET_KEY` is `changeme`.
 * Behind Cloudflare or another HTTPS proxy, set `HTTPS=1`, and turn on HTTPS redirects and HSTS in the proxy.
-* Don't expose the debug ports 5678/5679 from `docker-compose.yml` to the internet.
+* `docker-compose.yml` runs the code and static files baked into the image, on Gunicorn, as an ordinary user. After pulling new code, deploy with `docker compose up -d --build`.
+* `compose.dev.yml` is for development only: it opens the debug ports 5678/5679.
 
 ## Development & troubleshooting
 
-* The source tree is mounted into the containers. After code changes, run `docker compose restart app worker beat`.
+* Development: `docker compose -f docker-compose.yml -f compose.dev.yml up --build`. This mounts the source, runs Django's dev server with `DEBUG=1` (it reloads by itself) and starts debugpy. Restart `worker` and `beat` after changing their code.
 * Tests and lint: `pip install -r requirements-dev.txt`, then `pytest` and `ruff check .`. CI runs both, plus `ruff format --check`, on every pull request.
 * Front end: plain JavaScript modules in `scheduler/static/scheduler/js/`, with no build step. `dashboard.js` runs the lists and `route/main.js` the route window. The icons are one sprite, `scheduler/static/scheduler/icons.svg`.
 * Logs: `docker compose logs -f app worker beat`.
-* Debugging: with `DEBUG=1`, attach VS Code ("Python: Remote Attach") to `localhost:5678` (app) or `localhost:5679` (worker).
+* Debugging (with `compose.dev.yml`): attach VS Code ("Python: Remote Attach") to `localhost:5678` (app) or `localhost:5679` (worker).
 * Database login errors after changing `DB_PASS`: `docker compose down -v && docker compose up --build -d`. **This deletes all data.**
 * Change a password: `docker compose exec app python manage.py changepassword admin`.

@@ -1,5 +1,6 @@
-# Tools for tests and linting (not installed in the Docker image)
+# Development tools: tests, linting and the debugger (only in the image built by compose.dev.yml)
 -r requirements.txt
+debugpy~=1.8.22
 pytest~=9.1.1
 pytest-django~=4.14.0
 # Exact version so formatting and lint results don't change between runs

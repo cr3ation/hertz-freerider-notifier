@@ -1,3 +1,7 @@
+# Production: the code and the static files are in the image, Gunicorn serves the app.
+# For development (source mounted, Django's dev server, debugpy) add compose.dev.yml:
+#   docker compose -f docker-compose.yml -f compose.dev.yml up --build
+
 # Settings shared by the app, the worker and beat
 x-common-env: &common-env
   SECRET_KEY: ${SECRET_KEY}
@@ -10,12 +14,11 @@ x-common-env: &common-env
   CELERY_BROKER_URL: redis://redis:6379/0
   SITE_URL: ${SITE_URL:-}
 
-# The three Django containers start once Postgres and Redis answer, and come back after a crash or a reboot
+# The three Django containers run the same image in different roles. They start once Postgres and Redis
+# answer, and come back after a crash or a reboot.
 x-django: &django
   build: .
   restart: unless-stopped
-  volumes:
-    - .:/code
   depends_on:
     db:
       condition: service_healthy
@@ -47,6 +50,7 @@ services:
       retries: 12
   app:
     <<: *django
+    command: app
     environment:
       <<: *common-env
       DEBUG: ${DEBUG}
@@ -59,20 +63,17 @@ services:
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
     ports:
       - "${APP_PORT:-8000}:8000"
-      - "${APP_DEBUGPY_PORT:-5678}:5678"
   worker:
     <<: *django
-    entrypoint: ["/code/entrypoint-worker.sh"]
+    command: worker
     environment:
       <<: *common-env
       # The worker sends the notifications (scheduler.tasks.check_hertz)
       PUSHOVER_USER: ${PUSHOVER_USER}
       PUSHOVER_TOKEN: ${PUSHOVER_TOKEN}
-    ports:
-      - "5679:5678"  # Celery worker debugpy (host:container)
   beat:
     <<: *django
-    entrypoint: ["/code/entrypoint-beat.sh"]
+    command: beat
     environment:
       <<: *common-env
 volumes:

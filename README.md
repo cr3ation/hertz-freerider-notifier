@@ -49,7 +49,7 @@ Open <http://localhost:8000> and log in with `DJANGO_SUPERUSER_USERNAME` / `DJAN
 
 ## How it works
 
-Celery beat triggers a check every `HERTZ_CHECK_INTERVAL` seconds. The worker fetches all rides from the Hertz Freerider API and compares them with your searches. For each new match it sends a Pushover notification and records the ride, so it is never notified twice. A search matches when its origin and destination match the station names (case-insensitive, `*` as wildcard) and its dates overlap the car's pickup–return window.
+Celery beat triggers a check every `HERTZ_CHECK_INTERVAL` seconds. The worker fetches all rides from the Hertz Freerider API and compares them with your searches. For each new match it sends a Pushover notification. The ride is recorded once Pushover has accepted it, so it is never notified twice, and a failed send is tried again on the next check. A search matches when its origin and destination match the station names (case-insensitive, `*` as wildcard) and its dates overlap the car's pickup–return window.
 
 To trigger a check right away:
 
@@ -61,7 +61,7 @@ docker compose exec app python manage.py shell -c "from scheduler.tasks import c
 
 | Name | Description | Default |
 | ---- | ----------- | ------- |
-| `SECRET_KEY` | Django secret key | `changeme` |
+| `SECRET_KEY` | Django secret key. With `DEBUG=0` the app won't start on the sample value | `changeme` |
 | `DEBUG` | Debug mode (0 or 1) | `0` |
 | `HERTZ_CHECK_INTERVAL` | Seconds between Hertz checks | `120` |
 | `APP_PORT` | Host port for the web app | `8000` |
@@ -70,6 +70,7 @@ docker compose exec app python manage.py shell -c "from scheduler.tasks import c
 | `DB_HOST` / `DB_PORT` | Database host and port | `db` / `5432` |
 | `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `127.0.0.1,localhost` |
 | `CSRF_TRUSTED_ORIGINS` | Trusted origins incl. scheme, e.g. `https://example.com` | - |
+| `HTTPS` | `1` when the site is only reached through an HTTPS proxy such as Cloudflare: Django trusts the proxy's `X-Forwarded-Proto` and sends cookies over HTTPS only | `0` |
 | `PUSHOVER_USER` / `PUSHOVER_TOKEN` | Pushover user key and app token | - |
 | `DJANGO_SUPERUSER_USERNAME` / `DJANGO_SUPERUSER_PASSWORD` | Admin created on first start | `admin` / `admin123` |
 | `CELERY_BROKER_URL` | Redis URL for Celery | `redis://redis:6379/0` |
@@ -77,7 +78,8 @@ docker compose exec app python manage.py shell -c "from scheduler.tasks import c
 ## Production notes
 
 * Use `DEBUG=0`. The app then runs on Gunicorn, and static files get hashed names, so browsers never use stale CSS/JS after a deploy. With `DEBUG=1`, do a hard reload after deploying.
-* Change `SECRET_KEY`, `DB_PASS` and the admin password, and restrict `ALLOWED_HOSTS`.
+* Set `SECRET_KEY` to a long random string (`python -c "import secrets; print(secrets.token_urlsafe(50))"`), change `DB_PASS` and the admin password, and restrict `ALLOWED_HOSTS`. With `DEBUG=0` the app refuses to start while `SECRET_KEY` is `changeme`.
+* Behind Cloudflare or another HTTPS proxy, set `HTTPS=1`, and turn on HTTPS redirects and HSTS in the proxy.
 * Don't expose the debug ports 5678/5679 from `docker-compose.yml` to the internet.
 
 ## Development & troubleshooting

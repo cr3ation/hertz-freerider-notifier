@@ -10,6 +10,14 @@ class SavedSearch(models.Model):
     destination = models.CharField(max_length=100, help_text='Use * as wildcard')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            # The form gives a friendly error first; this keeps searches that can never match out of the database
+            models.CheckConstraint(
+                condition=models.Q(date_from__lte=models.F('date_to')), name='savedsearch_dates_in_order'
+            ),
+        ]
+
     def __str__(self):
         return f"{self.origin} → {self.destination} ({self.date_from} – {self.date_to})"
 

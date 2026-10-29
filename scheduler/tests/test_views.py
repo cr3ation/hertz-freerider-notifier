@@ -13,7 +13,9 @@ pytestmark = pytest.mark.django_db
 def hertz(monkeypatch, transport_routes):
     """Serve the fixture data instead of calling Hertz."""
     monkeypatch.setattr('scheduler.views.fetch_routes', lambda: transport_routes)
-    monkeypatch.setattr('scheduler.views.fetch_location_names', lambda: ['Stockholm Arlanda Flygplats', 'Kalmar Airport'])
+    monkeypatch.setattr(
+        'scheduler.views.fetch_location_names', lambda: ['Stockholm Arlanda Flygplats', 'Kalmar Airport']
+    )
 
 
 @pytest.fixture

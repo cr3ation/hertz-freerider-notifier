@@ -26,7 +26,9 @@ def route(id, pickup='Stockholm Arlanda Flygplats / Self Service Kiosk', ret='GÃ
 
 @pytest.fixture
 def api(monkeypatch):
-    payload = [{'pickupLocationName': 'x', 'returnLocationName': 'y', 'routes': [route(101), route(102, ret='Kalmar Airport')]}]
+    payload = [
+        {'pickupLocationName': 'x', 'returnLocationName': 'y', 'routes': [route(101), route(102, ret='Kalmar Airport')]}
+    ]
     monkeypatch.setattr('scheduler.tasks.fetch_routes', lambda: payload)
     return payload
 

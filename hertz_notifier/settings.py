@@ -104,6 +104,15 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Django's cache lives in Redis database 1 (Celery's broker uses database 0). The worker keeps the latest
+# Hertz routes there for the dashboard, and the notification maps keep their OpenStreetMap tiles there.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://redis:6379/1'),
+    }
+}
+
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
 HERTZ_CHECK_INTERVAL = float(os.getenv('HERTZ_CHECK_INTERVAL') or 120)  # seconds
 CELERY_BEAT_SCHEDULE = {
@@ -115,6 +124,8 @@ CELERY_BEAT_SCHEDULE = {
 
 PUSHOVER_USER = os.getenv('PUSHOVER_USER')
 PUSHOVER_TOKEN = os.getenv('PUSHOVER_TOKEN')
+# The dashboard's address, e.g. https://hertz.example.com; the notification's button opens the route there
+SITE_URL = os.getenv('SITE_URL', '').rstrip('/')
 
 # Auth flow
 LOGOUT_REDIRECT_URL = '/accounts/login/'

@@ -7,13 +7,16 @@
  * The "Map" button opens the same window as an overview of every route visible in the table; picking one
  * shows its steps while the list of all routes stays on the right. Clicking a station shows a station card
  * with the routes from and to it. Arrows on the lines show each route's direction.
- * Data comes from the view as JSON (json_script "route-details-data"), keyed by route id.
+ * Data comes from the view as JSON (json_script "route-details-data"): each station once, keyed by its Hertz
+ * tracCode, routes keyed by id and pointing at their stations, and aliases for identical cars' other ride ids.
  */
 (function () {
   const dataEl = document.getElementById('route-details-data');
   const modalEl = document.getElementById('routeModal');
   if (!dataEl || !modalEl || !window.bootstrap) return;
-  const ROUTES = JSON.parse(dataEl.textContent);
+  const DATA = JSON.parse(dataEl.textContent);
+  const ROUTES = {};
+  Object.entries(DATA.routes).forEach(([id, r]) => { ROUTES[id] = { ...r, from: DATA.stations[r.from], to: DATA.stations[r.to] }; });
   const modal = new bootstrap.Modal(modalEl);
   const $ = id => document.getElementById(id);
 
@@ -50,9 +53,10 @@
   const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const iso = s => s.replace('T', ' ');
   const weekday = s => DAYS[new Date(s).getDay()];
-  const minutesOf = duration => {
-    const h = /(\d+)h/.exec(duration || ''), m = /(\d+)m/.exec(duration || '');
-    return (h ? +h[1] * 60 : 0) + (m ? +m[1] : 0);
+  // 137 -> "2h 17m", as format_duration in presentation.py
+  const duration = minutes => {
+    const h = Math.floor(minutes / 60), m = minutes % 60;
+    return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
   };
   const placeUrl = l => `https://www.google.com/maps/search/?api=1&query=${l.lat},${l.lon}`;
   const directionsUrl = (a, b) => `https://www.google.com/maps/dir/?api=1&origin=${a.lat},${a.lon}&destination=${b.lat},${b.lon}&travelmode=driving`;
@@ -104,7 +108,7 @@
     const now = Date.now(), a = new Date(r.availableAt).getTime(), z = new Date(r.latestReturn).getTime();
     const s0 = Math.min(now, a), total = Math.max(1, z - s0), start = Math.max(now, a);
     const pct = t => ((t - s0) / total * 100).toFixed(2) + '%';
-    const drive = minutesOf(r.duration) * 60000 / total * 100;
+    const drive = r.minutes * 60000 / total * 100;
     return `<div class="rm-win">
       <div class="top"><span>Time window</span><b>${r.hoursAvailable} h</b></div>
       <div class="bar">${a > now ? `<i class="wait" style="left:0;width:${pct(a)}"></i>` : ''}<i class="ok" style="left:${pct(start)};right:0"></i><i class="drv" style="left:${pct(start)};width:max(4px, ${drive.toFixed(2)}%)"></i></div>
@@ -122,7 +126,7 @@
 
   // The car's current destination plus the alternatives (same transportOfferId), nearest first
   function destinations(r) {
-    return [{ id: r.id, km: r.km, duration: r.duration, route: r }]
+    return [{ id: r.id, km: r.km, minutes: r.minutes, route: r }]
       .concat(r.alternatives.filter(x => ROUTES[x.id]).map(x => ({ ...x, route: ROUTES[x.id] })))
       .sort((a, b) => a.km - b.km);
   }
@@ -145,7 +149,7 @@
       <section class="rm-step" data-step="ab">
         <button type="button" class="rm-mk car" data-focus="ab" title="Show the route on the map">${icon(r.car.van ? 'bus' : 'car', 16)}</button>
         <div class="rm-k">Step 2 · Drive ${showOnMap('ab')}</div>
-        <div class="rm-drive"><div><b>${r.km} km</b><span>distance</span></div><div><b>≈ ${esc(r.duration)}</b><span>drive time</span></div><div><b>${r.maxKm} km</b><span>max allowed</span></div></div>
+        <div class="rm-drive"><div><b>${r.km} km</b><span>distance</span></div><div><b>≈ ${duration(r.minutes)}</b><span>drive time</span></div><div><b>${r.maxKm} km</b><span>max allowed</span></div></div>
         <div class="rm-card">${carHtml(r)}${windowHtml(r)}</div>
       </section>
       <section class="rm-step" data-step="b">
@@ -192,7 +196,7 @@
     return `<a class="rm-dest-item ${id === selectedId ? 'on' : ''}" href="#route-${esc(id)}" data-route-id="${esc(id)}" data-line="${esc(id)}">
       <span class="dot"></span>
       <span><span class="name">${place(r.from, 12)}<span class="to">→</span>${place(r.to, 12)}</span><span class="meta">by ${iso(r.latestReturn)} · ${esc(r.car.name || 'Model TBA')}</span></span>
-      <span class="km">${r.km} km<span class="meta">${esc(r.duration)}</span></span></a>`;
+      <span class="km">${r.km} km<span class="meta">${duration(r.minutes)}</span></span></a>`;
   }
 
   // Station card: what the station offers and every listed route from and to it
@@ -264,7 +268,7 @@
     return `<a class="rm-dest-item ${o.id === r.id ? 'on' : ''}" href="#route-${esc(o.id)}" data-route-id="${esc(o.id)}" data-line="${esc(o.id)}">
       <span class="dot"></span>
       <span><span class="name">${place(o.route.to, 13)}</span><span class="meta">by ${iso(o.route.latestReturn)}</span></span>
-      <span class="km">${o.km} km<span class="meta">${esc(o.duration)}</span></span></a>`;
+      <span class="km">${o.km} km<span class="meta">${duration(o.minutes)}</span></span></a>`;
   }
 
   // Map
@@ -346,9 +350,8 @@
         .on('click', () => open(id)).on('mouseover', () => highlight(id, true)).on('mouseout', () => highlight(id, false));
       arrows[id] = arrowMarker(r).addTo(layer);
       [[r.from, 'from'], [r.to, 'to']].forEach(([loc, side]) => {
-        const key = `${loc.lat},${loc.lon}`;
-        if (!stations.has(key)) stations.set(key, { loc, from: [], to: [] });
-        stations.get(key)[side].push(id);
+        if (!stations.has(loc.code)) stations.set(loc.code, { loc, from: [], to: [] });
+        stations.get(loc.code)[side].push(id);
       });
     });
     stations.forEach((st, key) => {
@@ -412,7 +415,8 @@
   }
 
   function open(id) {
-    const r = ROUTES[id];
+    // A notification links to its first ride, which may be an identical car listed under another row
+    const r = ROUTES[id] || ROUTES[DATA.aliases[id]];
     if (!r) return;
     current = r;
     station = null;

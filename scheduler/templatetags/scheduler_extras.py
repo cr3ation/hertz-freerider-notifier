@@ -52,14 +52,6 @@ def icon(name, size=16):
     )
 
 
-@register.filter
-def get_item(d, key):
-    try:
-        return d.get(key, 0)
-    except Exception:
-        return ''
-
-
 @register.filter(name='add_class')
 def add_class(field, css):
     """Add CSS class(es) to a Django form field widget in templates.

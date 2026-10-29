@@ -1,5 +1,13 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.db import models
+
+
+def wildcard_match(pattern, text):
+    """'Stockholm*' matches 'Stockholm Arlanda Flygplats': case-insensitive, * stands for anything."""
+    regex = '^' + re.escape(pattern).replace('\\*', '.*') + '$'
+    return re.match(regex, text or '', re.IGNORECASE) is not None
 
 
 class SavedSearch(models.Model):
@@ -20,6 +28,15 @@ class SavedSearch(models.Model):
 
     def __str__(self):
         return f"{self.origin} → {self.destination} ({self.date_from} – {self.date_to})"
+
+    def matches(self, ride):
+        """The one matching rule, for the dashboard and the notifications alike (ride: a hertz.Ride).
+
+        The search's dates must overlap the car's pickup–return window, and both station names must match.
+        """
+        if self.date_to < ride.available_at.date() or self.date_from > ride.latest_return.date():
+            return False
+        return wildcard_match(self.origin, ride.origin) and wildcard_match(self.destination, ride.destination)
 
 
 class NotifiedRide(models.Model):

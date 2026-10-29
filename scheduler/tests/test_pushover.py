@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 import requests
 
-from scheduler.utils import send_pushover
+from scheduler.pushover import send as send_pushover
 
 
 @pytest.fixture
@@ -15,9 +15,9 @@ def credentials(monkeypatch):
 
 
 def fake_post(status=200, body='{"status":1}', error=None, calls=None):
-    def post(url, data, timeout):
+    def post(url, data, files, timeout):
         if calls is not None:
-            calls.append(SimpleNamespace(url=url, data=data, timeout=timeout))
+            calls.append(SimpleNamespace(url=url, data=data, files=files, timeout=timeout))
         if error:
             raise error
         response = requests.Response()
@@ -43,6 +43,14 @@ def test_accepted_message(monkeypatch, credentials):
         'url_title': 'Open',
         'html': 1,
     }
+    assert call.files is None
+
+
+def test_sends_the_image_as_an_attachment(monkeypatch, credentials):
+    calls = []
+    monkeypatch.setattr(requests, 'post', fake_post(calls=calls))
+    assert send_pushover('Hi', image=b'jpeg-bytes') is True
+    assert calls[0].files == {'attachment': ('route.jpg', b'jpeg-bytes', 'image/jpeg')}
 
 
 def test_rejected_message(monkeypatch, credentials, caplog):

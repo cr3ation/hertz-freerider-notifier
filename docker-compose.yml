@@ -8,6 +8,7 @@ x-common-env: &common-env
   DB_HOST: ${DB_HOST}
   DB_PORT: ${DB_PORT}
   CELERY_BROKER_URL: redis://redis:6379/0
+  SITE_URL: ${SITE_URL:-}
 
 # The three Django containers start once Postgres and Redis answer, and come back after a crash or a reboot
 x-django: &django

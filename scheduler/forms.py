@@ -18,3 +18,10 @@ class SavedSearchForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'list': 'hertz-locations', 'placeholder': 'e.g. * (anywhere)'}
             ),
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        date_from, date_to = cleaned.get('date_from'), cleaned.get('date_to')
+        if date_from and date_to and date_from > date_to:
+            self.add_error('date_to', '"Date to" must be on or after "Date from".')
+        return cleaned

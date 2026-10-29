@@ -1,78 +1,79 @@
+# Settings shared by the app, the worker and beat
+x-common-env: &common-env
+  SECRET_KEY: ${SECRET_KEY}
+  HERTZ_CHECK_INTERVAL: ${HERTZ_CHECK_INTERVAL}
+  DB_NAME: ${DB_NAME}
+  DB_USER: ${DB_USER}
+  DB_PASS: ${DB_PASS}
+  DB_HOST: ${DB_HOST}
+  DB_PORT: ${DB_PORT}
+  CELERY_BROKER_URL: redis://redis:6379/0
+  SITE_URL: ${SITE_URL:-}
+
+# The three Django containers start once Postgres and Redis answer, and come back after a crash or a reboot
+x-django: &django
+  build: .
+  restart: unless-stopped
+  volumes:
+    - .:/code
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
 services:
   db:
     image: postgres:15
+    restart: unless-stopped
     environment:
-        POSTGRES_DB: ${DB_NAME}
-        POSTGRES_USER: ${DB_USER}
-        POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
   redis:
     image: redis:7
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
   app:
-    build: .
-    volumes:
-      - .:/code
+    <<: *django
     environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=${DEBUG}
-      - HERTZ_CHECK_INTERVAL=${HERTZ_CHECK_INTERVAL}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
-      - PUSHOVER_USER=${PUSHOVER_USER}
-      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
-      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+      <<: *common-env
+      DEBUG: ${DEBUG}
+      HTTPS: ${HTTPS:-0}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS}
+      PUSHOVER_USER: ${PUSHOVER_USER}
+      PUSHOVER_TOKEN: ${PUSHOVER_TOKEN}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
     ports:
       - "${APP_PORT:-8000}:8000"
       - "${APP_DEBUGPY_PORT:-5678}:5678"
-    depends_on:
-      - db
-      - redis
   worker:
-    build: .
+    <<: *django
     entrypoint: ["/code/entrypoint-worker.sh"]
-    volumes:
-      - .:/code
+    environment:
+      <<: *common-env
+      # The worker sends the notifications (scheduler.tasks.check_hertz)
+      PUSHOVER_USER: ${PUSHOVER_USER}
+      PUSHOVER_TOKEN: ${PUSHOVER_TOKEN}
     ports:
       - "5679:5678"  # Celery worker debugpy (host:container)
-    environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - HERTZ_CHECK_INTERVAL=${HERTZ_CHECK_INTERVAL}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      # The worker sends the notifications (scheduler.tasks.check_hertz)
-      - PUSHOVER_USER=${PUSHOVER_USER}
-      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
-    depends_on:
-      - db
-      - redis
   beat:
-    build: .
+    <<: *django
     entrypoint: ["/code/entrypoint-beat.sh"]
-    volumes:
-      - .:/code
     environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - HERTZ_CHECK_INTERVAL=${HERTZ_CHECK_INTERVAL}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
+      <<: *common-env
 volumes:
   postgres_data:

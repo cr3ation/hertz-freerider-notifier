@@ -1,100 +1,85 @@
-import datetime
 import logging
 
 from celery import shared_task
+from django.db import IntegrityError, transaction
+from django.utils import timezone
 
+from . import hertz, pushover, routemap
 from .models import NotifiedRide, SavedSearch
-from .utils import fetch_routes, send_pushover, wildcard_match
+from .notifications import compose
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
 def check_hertz():
+    """Fetch the routes, which also refreshes the dashboard's snapshot, and notify about new matches."""
     try:
-        data = fetch_routes()
+        data, _ = hertz.refresh_routes()
     except Exception as e:
-        logging.exception('Fetching error: %s', e)
+        logger.warning('Could not fetch routes from Hertz: %s', e)
         return
 
-    # Handle the actual API structure: array of location pairs with routes
-    if not isinstance(data, list):
-        logging.warning('Unexpected API response format, expected list')
+    # A ride only counts as notified once Pushover has accepted it, so without Pushover there is nothing to do
+    if not pushover.configured():
+        logger.warning('Pushover is not configured (PUSHOVER_USER/PUSHOVER_TOKEN); nobody is notified')
         return
 
-    for search in SavedSearch.objects.select_related('owner'):
-        for location_pair in data:
-            # Each location pair has pickupLocationName, returnLocationName, and routes array
-            routes = location_pair.get('routes', [])
+    searches = list(SavedSearch.objects.all())
+    now = timezone.now()
+    # Identical cars (same stations, times and model) get one notification together
+    for group in hertz.group_identical(hertz.rides(data)):
+        if any(search.matches(group[0]) for search in searches):
+            notify(group, now)
 
-            for route in routes:
-                # Extract route data using correct API field names
-                route_id = str(route.get('id', ''))
-                if not route_id:
-                    continue
 
-                # Get pickup and return location details
-                pickup_location = route.get('pickupLocation', {})
-                return_location = route.get('returnLocation', {})
+def notify(group, now):
+    """Send one notification for a group of identical rides, unless one of them was notified before."""
+    ids = [ride.id for ride in group]
+    if NotifiedRide.objects.filter(ride_id__in=ids).exists():
+        return
 
-                origin = pickup_location.get('name', '')
-                destination = return_location.get('name', '')
+    ride = group[0]
+    notification = compose(group, now)
+    pickup, dropoff = ride.pickup, ride.dropoff
+    image = None
+    if None not in (pickup.get('geoLat'), pickup.get('geoLon'), dropoff.get('geoLat'), dropoff.get('geoLon')):
+        image = routemap.render((pickup['geoLat'], pickup['geoLon']), (dropoff['geoLat'], dropoff['geoLon']))
 
-                # Get datetime strings and convert to dates
-                pickup_datetime_str = route.get('availableAt', '')
-                return_datetime_str = route.get('latestReturn', '')
+    # Reserve the rides before sending. ride_id is unique, so two overlapping runs can't both send them.
+    try:
+        with transaction.atomic():
+            NotifiedRide.objects.bulk_create([_notified_ride(r) for r in group])
+    except IntegrityError:
+        return
 
-                try:
-                    pickup_date = datetime.datetime.fromisoformat(pickup_datetime_str[:10]).date()
-                    return_date = datetime.datetime.fromisoformat(return_datetime_str[:10]).date()
-                except ValueError, IndexError:
-                    continue
+    try:
+        sent = pushover.send(
+            notification.message,
+            title=notification.title,
+            url=notification.url,
+            url_title=notification.url_title,
+            html=True,
+            image=image,
+        )
+    except Exception:
+        logger.exception('Sending the notification for %s failed', ', '.join(ids))
+        sent = False
+    if sent:
+        logger.info('Notified %s: %s → %s', ', '.join(ids), ride.origin, ride.destination)
+    else:
+        # Not delivered: release the rides so the next run tries again
+        NotifiedRide.objects.filter(ride_id__in=ids).delete()
 
-                # Check if date ranges overlap (any overlap between search interval and route interval)
-                # Overlap condition: not (search ends before route starts OR search starts after route ends)
-                if (search.date_to < pickup_date) or (search.date_from > return_date):
-                    continue
 
-                # Check if locations match search criteria
-                if not wildcard_match(search.origin, origin):
-                    continue
-                if not wildcard_match(search.destination, destination):
-                    continue
-
-                # Skip if already notified
-                if NotifiedRide.objects.filter(ride_id=route_id).exists():
-                    continue
-
-                # Send notification with additional useful info
-                car_model = route.get('carModel', 'Unknown car')
-                distance = route.get('distance', 0)
-                travel_time = route.get('travelTime', None)
-                # Parse datetimes for DB fields
-                available_at = None
-                latest_return = None
-                available_at = datetime.datetime.fromisoformat(route.get('availableAt', ''))
-                latest_return = datetime.datetime.fromisoformat(route.get('latestReturn', ''))
-
-                # Format dates in European style with weekday names
-                pickup_str = pickup_date.strftime('%a %d/%m/%Y')
-                return_str = return_date.strftime('%a %d/%m/%Y')
-
-                # HTML message (limited tags supported by Pushover when html=1)
-                # Provide a direct clickable link.
-                msg = (
-                    f"🚗 <b>{origin}</b> → <b>{destination}</b><br><br>"
-                    f"📅 {pickup_str} - {return_str}<br>"
-                    f"🚙 {car_model}<br>"
-                    f"📍 {distance:.0f} km<br><br>"
-                    f"Book ride <a href=\"https://www.hertzfreerider.se/sv-se/\">here</a>"
-                )
-
-                send_pushover(msg, html=True)
-                NotifiedRide.objects.create(
-                    ride_id=route_id,
-                    pickup_location_name=origin,
-                    return_location_name=destination,
-                    distance=distance,
-                    available_at=available_at,
-                    latest_return=latest_return,
-                    travel_time=travel_time,
-                    car_type=car_model,
-                )
+def _notified_ride(ride):
+    return NotifiedRide(
+        ride_id=ride.id,
+        pickup_location_name=ride.origin,
+        return_location_name=ride.destination,
+        distance=ride.route.get('distance') or 0,
+        available_at=ride.available_at,
+        latest_return=ride.latest_return,
+        travel_time=ride.route.get('travelTime'),
+        car_type=ride.route.get('carModel') or 'Unknown car',
+    )

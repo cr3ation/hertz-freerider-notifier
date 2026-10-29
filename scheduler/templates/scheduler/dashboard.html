@@ -19,9 +19,8 @@
     <div class="dashboard-grid mb-4">
         <div class="glass-card p-4 form-card">
             <h5 class="section-title mb-3">{% icon 'plus' 18 %}{% if editing_id %}Edit alert{% else %}Add new alert{% endif %}</h5>
-            <form method="post" novalidate>
+            <form method="post" action="{% if editing_id %}{% url 'update_search' editing_id %}{% else %}{% url 'create_search' %}{% endif %}" novalidate>
                 {% csrf_token %}
-                {% if editing_id %}<input type="hidden" name="editing_id" value="{{ editing_id }}">{% endif %}
                 {{ form.as_p }}
                 <div class="d-flex gap-2 mt-2">
                     <button class="btn btn-primary w-100" type="submit">{% if editing_id %}Update alert{% else %}Save alert{% endif %}</button>
@@ -46,7 +45,7 @@
                     </thead>
                     <tbody>
                         {% for s in searches %}
-                            {% with mc=search_match_counts|get_item:s.id %}
+                            {% with mc=s.match_count %}
                             <tr class="{% if mc %}has-match{% else %}row-faded{% endif %}">
                                 <td><span class="indicator-dot"></span><span class="date-pill">{{ s.date_from|date:"Y-m-d" }}</span></td>
                                 <td><span class="date-pill">{{ s.date_to|date:"Y-m-d" }}</span></td>
@@ -81,7 +80,7 @@
             <!-- Mobile search cards -->
             <div class="searches-cards mobile-card-list">
                 {% for s in searches %}
-                    {% with mc=search_match_counts|get_item:s.id %}
+                    {% with mc=s.match_count %}
                     <div class="search-card glass-card {% if mc %}has-match{% else %}row-faded{% endif %}">
                         <div class="sc-head d-flex justify-content-between align-items-start">
                             <div class="sc-route"><strong>{{ s.origin }}</strong><span class="arrow">→</span><span class="dest">{{ s.destination }}</span></div>

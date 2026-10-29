@@ -16,24 +16,29 @@ A Django & Celery app that watches [Hertz Freerider](https://www.hertzfreerider.
 
 ### Desktop
 <p align="center">
-   <a href="docs/img/screenshot_login.png" target="_blank" title="Login"><img src="docs/img/screenshot_login.png" alt="Login screen" width="300" style="max-width:100%; border:1px solid #ccc; border-radius:12px; margin:6px;"></a>
-   <a href="docs/img/screenshot_dashboard_01.png" target="_blank" title="Searches & live availability"><img src="docs/img/screenshot_dashboard_01.png" alt="Dashboard with saved searches and live availability" width="300" style="max-width:100%; border:1px solid #ccc; border-radius:12px; margin:6px;"></a>
-   <a href="docs/img/screenshot_details.png" target="_blank" title="Route details"><img src="docs/img/screenshot_details.png" alt="Route details with map and trip steps" width="300" style="max-width:100%; border:1px solid #ccc; border-radius:12px; margin:6px;"></a>
-   <a href="docs/img/screenshot_dashboard_02.png" target="_blank" title="Notification history"><img src="docs/img/screenshot_dashboard_02.png" alt="Notification history" width="300" style="max-width:100%; border:1px solid #ccc; border-radius:12px; margin:6px;"></a>
+  <a href="docs/img/desktop-login.webp"><img src="docs/img/desktop-login.webp" alt="Login" width="430"></a>
+  <a href="docs/img/desktop-dashboard.webp"><img src="docs/img/desktop-dashboard.webp" alt="Saved searches and live availability" width="430"></a>
+  <a href="docs/img/desktop-route.webp"><img src="docs/img/desktop-route.webp" alt="Route details: map, trip in three steps and the car's other destinations" width="430"></a>
+  <a href="docs/img/desktop-map.webp"><img src="docs/img/desktop-map.webp" alt="Every route on one map" width="430"></a>
+  <a href="docs/img/desktop-history.webp"><img src="docs/img/desktop-history.webp" alt="Notification history" width="430"></a>
 </p>
-<p align="center" style="margin-top:-6px;">
-   <sub><strong>Left → Right:</strong> Login · Searches + Live availability · Route details · Notification history</sub>
-</p>
+<p align="center"><sub>Login · Searches and live availability · Route details · All routes on a map · Notification history</sub></p>
 
 ### Mobile
 <p align="center">
-   <a href="docs/img/screenshot_mobile_01.png" target="_blank" title="Live availability"><img src="docs/img/screenshot_mobile_01.png" alt="Mobile – live availability" height="320" style="max-height:320px; border:1px solid #ccc; border-radius:28px; margin:6px; aspect-ratio:9/19; object-fit:cover;"></a>
-   <a href="docs/img/screenshot_mobile_details.png" target="_blank" title="Route details"><img src="docs/img/screenshot_mobile_details.png" alt="Mobile – route details" height="320" style="max-height:320px; border:1px solid #ccc; border-radius:28px; margin:6px; aspect-ratio:9/19; object-fit:cover;"></a>
-   <a href="docs/img/screenshot_mobile_02.png" target="_blank" title="Searches"><img src="docs/img/screenshot_mobile_02.png" alt="Mobile – searches" height="320" style="max-height:320px; border:1px solid #ccc; border-radius:28px; margin:6px; aspect-ratio:9/19; object-fit:cover;"></a>
+  <a href="docs/img/mobile-live.webp"><img src="docs/img/mobile-live.webp" alt="Live availability on a phone" width="250"></a>
+  <a href="docs/img/mobile-route.webp"><img src="docs/img/mobile-route.webp" alt="Route details on a phone" width="250"></a>
+  <a href="docs/img/mobile-searches.webp"><img src="docs/img/mobile-searches.webp" alt="Saved searches on a phone" width="250"></a>
 </p>
-<p align="center" style="margin-top:-6px;">
-   <sub><strong>Mobile:</strong> Live availability · Route details · Searches</sub>
+<p align="center"><sub>Live availability · Route details · Searches</sub></p>
+
+### Notifications
+<p align="center">
+  <a href="docs/img/notification-lock.webp"><img src="docs/img/notification-lock.webp" alt="The notification on the lock screen" width="250"></a>
+  <a href="docs/img/notification-held.webp"><img src="docs/img/notification-held.webp" alt="The notification held open, with the map" width="250"></a>
+  <a href="docs/img/notification-app.webp"><img src="docs/img/notification-app.webp" alt="The notification in the Pushover app" width="250"></a>
 </p>
+<p align="center"><sub>Lock screen · Held open · In the Pushover app. The title is the car; then the route with the full station names, the time window, the distance and any warnings, plus a map.</sub></p>
 
 ## Getting started
 
@@ -42,7 +47,7 @@ Requires Docker with Docker Compose and a Pushover account.
 ```bash
 git clone https://github.com/cr3ation/hertz-freerider-notifier.git
 cd hertz-freerider-notifier
-cp .env.sample .env      # set SECRET_KEY, DB_PASS, PUSHOVER_USER, PUSHOVER_TOKEN and the admin login
+cp .env.sample .env      # set SECRET_KEY, DB_PASS, PUSHOVER_USER, PUSHOVER_TOKEN, SITE_URL and the admin login
 docker compose up --build -d
 ```
 

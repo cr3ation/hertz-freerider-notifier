@@ -8,7 +8,8 @@ let map = null, layer = null, lines = {}, arrows = {}, bounds = null;
 // The overview's stations, keyed by Hertz tracCode: { loc, from: [route ids], to: [route ids], marker }
 export const stations = new Map();
 
-export const wide = () => window.matchMedia('(min-width: 861px)').matches;
+// Side panels from Bootstrap's lg breakpoint, as in route-modal.css; below it the steps are a bottom sheet
+export const wide = () => window.matchMedia('(min-width: 992px)').matches;
 
 function ensureMap() {
   if (!map) {

@@ -74,14 +74,15 @@ def test_the_notification_follows_the_chosen_design(api, pushover, owner, settin
     make_search(owner)
     check_hertz()
     kwargs = pushover.call_args.kwargs
-    assert pushover.call_args.args[0].split('\n') == [
-        '<font color="#e8890c"><b>A</b></font> <b>Stockholm Arlanda Flygplats</b>',
-        'from 2025-08-12 07:00 (now)',
-        '<font color="#e0453a"><b>B</b></font> <b>Göteborg Centralstation</b>',
-        'by 2025-08-14 19:00',
-        'Volvo V60 T6 AUT AWD NE PLUS D',
+    message = pushover.call_args.args[0]
+    # Dates are glued together with non-breaking hyphens and spaces; read them as plain ones here
+    assert message.replace('\u2011', '-').replace('\u00a0', ' ').split('\n') == [
+        '📍 <b>Stockholm Arlanda Flygplats</b> → <b>Göteborg Centralstation</b>',
+        '🕘 2025-08-12 07:00 (now) – 2025-08-14 19:00',
+        '🛣️ 520 km · 5h',
     ]
-    assert kwargs['title'] == 'Arlanda → Göteborg C'
+    assert '2025\u201108\u201112\u00a007:00' in message
+    assert kwargs['title'] == 'Volvo V60 T6 AUT AWD NE PLUS D'
     assert (kwargs['url'], kwargs['url_title']) == ('https://hertz.example.com/#route-101', 'Show route')
     assert (kwargs['html'], kwargs['image']) == (True, b'map-jpeg')
 
@@ -91,7 +92,7 @@ def test_identical_cars_get_one_notification(api, pushover, owner):
     make_search(owner)
     check_hertz()
     assert pushover.call_count == 1
-    assert '2 × Volvo V60 T6 AUT AWD NE PLUS D' in pushover.call_args.args[0]
+    assert pushover.call_args.kwargs['title'] == '2 × Volvo V60 T6 AUT AWD NE PLUS D'
     assert set(NotifiedRide.objects.values_list('ride_id', flat=True)) == {'101', '103'}
 
 

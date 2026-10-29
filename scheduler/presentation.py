@@ -206,6 +206,13 @@ def car_text(car, count=1):
     return model or 'Car (model TBA)'
 
 
+def drive(route):
+    """(km, minutes) of the drive: Hertz's estimate of the actual trip, or the maximum when that is missing."""
+    km = round(route.get('originalDistance') or route.get('distance') or 0)
+    minutes = round(route.get('originalTravelTime') or route.get('travelTime') or 0)
+    return km, minutes
+
+
 def route_warnings(car, origin, destination):
     """What to watch out for on a route: Hertz's notes about the car, and stations without a key kiosk."""
     warnings = list(car['notes'])
@@ -239,6 +246,11 @@ def format_until(target, now):
 def local_iso(moment):
     """'2025-08-12T07:00' in Swedish time, without an offset, as the route window's JavaScript expects."""
     return moment.astimezone(TZ).replace(tzinfo=None).isoformat(timespec='minutes')
+
+
+def _alternative(ride, row_id):
+    km, minutes = drive(ride.route)
+    return {'id': row_id, 'km': km, 'minutes': minutes}
 
 
 def build_routes(raw_data, searches, notified_ids, now):
@@ -279,8 +291,7 @@ def build_routes(raw_data, searches, notified_ids, now):
         for search_id in matches:
             match_counts[search_id] += 1
 
-        km = round(route.get('originalDistance') or route.get('distance') or 0)
-        minutes = round(route.get('originalTravelTime') or route.get('travelTime') or 0)
+        km, minutes = drive(route)
         available_now = ride.available_at <= now
         pickup_in = '' if available_now else format_until(ride.available_at, now)
         alternatives = [r for r in by_offer.get(route.get('transportOfferId'), []) if r.id not in ride_ids]
@@ -321,11 +332,7 @@ def build_routes(raw_data, searches, notified_ids, now):
             'count': len(members),
             'warnings': route_warnings(car, origin, destination),
             'alternatives': [
-                {
-                    'id': row_of[r.id],
-                    'km': round(r.route.get('originalDistance') or r.route.get('distance') or 0),
-                    'minutes': round(r.route.get('originalTravelTime') or r.route.get('travelTime') or 0),
-                }
+                _alternative(r, row_of[r.id])
                 for r in sorted(alternatives, key=lambda r: r.route.get('priorityOrder') or 0)
             ],
         }

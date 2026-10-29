@@ -1,8 +1,8 @@
-"""What a notification says, in the design picked from the mockups ("A2").
+"""What a notification says, in the design picked from the mockups.
 
-The title has the short names. Then each station gets a line with its full name, followed by a line with
-its time; the car has a line of its own and warnings come last, in orange. On the lock screen Pushover
-shows the text without the HTML, cut after about four lines, so the stations and times come first.
+The title is the car. Below it, each on its own line behind an icon: the route with the full station
+names, the time window and the drive. Warnings come last, in orange. On the lock screen Pushover shows
+the text without the HTML, cut after about four lines, so the route and the times come first.
 """
 
 from html import escape
@@ -11,7 +11,7 @@ from typing import NamedTuple
 from django.conf import settings
 
 from .hertz import TZ
-from .presentation import car_details, car_text, location_details, route_warnings, station_name
+from .presentation import car_details, car_text, drive, format_duration, location_details, route_warnings, station_name
 
 BOOK_URL = 'https://www.hertzfreerider.se/sv-se/'
 
@@ -28,7 +28,9 @@ def _html(text):
 
 
 def _time(moment):
-    return moment.astimezone(TZ).strftime('%Y-%m-%d %H:%M')
+    """'2026-10-29 09:00' with a non-breaking hyphen and space: a time line too long for the lock screen then
+    breaks at the dash between the two times, never inside a date."""
+    return moment.astimezone(TZ).strftime('%Y-%m-%d %H:%M').replace('-', '\u2011').replace(' ', '\u00a0')
 
 
 def compose(group, now):
@@ -38,12 +40,12 @@ def compose(group, now):
     car = car_details(
         ride.route.get('carModel'), ride.route.get('publicDescription'), ride.route.get('publicInformation')
     )
+    km, minutes = drive(ride.route)
+    available = '\u00a0(now)' if ride.available_at <= now else ''
     lines = [
-        f'<font color="#e8890c"><b>A</b></font> <b>{_html(station_name(ride.origin))}</b>',
-        f'from {_time(ride.available_at)}' + (' (now)' if ride.available_at <= now else ''),
-        f'<font color="#e0453a"><b>B</b></font> <b>{_html(station_name(ride.destination))}</b>',
-        f'by {_time(ride.latest_return)}',
-        _html(car_text(car, len(group))),
+        f'📍 <b>{_html(station_name(ride.origin))}</b> → <b>{_html(station_name(ride.destination))}</b>',
+        f'🕘 {_time(ride.available_at)}{available} – {_time(ride.latest_return)}',
+        f'🛣️ {km} km · {format_duration(minutes)}',
     ]
     warnings = route_warnings(car, origin, destination)
     if warnings:
@@ -53,4 +55,4 @@ def compose(group, now):
         url, url_title = f'{settings.SITE_URL}/#route-{ride.id}', 'Show route'
     else:
         url, url_title = BOOK_URL, 'Book on Hertz'
-    return Notification(f'{origin["short"]} → {destination["short"]}', '\n'.join(lines), url, url_title)
+    return Notification(car_text(car, len(group)), '\n'.join(lines), url, url_title)

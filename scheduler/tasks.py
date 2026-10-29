@@ -1,7 +1,11 @@
-import datetime, logging
+import datetime
+import logging
+
 from celery import shared_task
-from .models import SavedSearch, NotifiedRide
-from .utils import fetch_routes, wildcard_match, send_pushover
+
+from .models import NotifiedRide, SavedSearch
+from .utils import fetch_routes, send_pushover, wildcard_match
+
 
 @shared_task
 def check_hertz():
@@ -20,35 +24,35 @@ def check_hertz():
         for location_pair in data:
             # Each location pair has pickupLocationName, returnLocationName, and routes array
             routes = location_pair.get('routes', [])
-            
+
             for route in routes:
                 # Extract route data using correct API field names
                 route_id = str(route.get('id', ''))
                 if not route_id:
                     continue
-                
+
                 # Get pickup and return location details
                 pickup_location = route.get('pickupLocation', {})
                 return_location = route.get('returnLocation', {})
-                
+
                 origin = pickup_location.get('name', '')
                 destination = return_location.get('name', '')
-                
+
                 # Get datetime strings and convert to dates
                 pickup_datetime_str = route.get('availableAt', '')
                 return_datetime_str = route.get('latestReturn', '')
-                
+
                 try:
                     pickup_date = datetime.datetime.fromisoformat(pickup_datetime_str[:10]).date()
                     return_date = datetime.datetime.fromisoformat(return_datetime_str[:10]).date()
-                except (ValueError, IndexError):
+                except ValueError, IndexError:
                     continue
 
                 # Check if date ranges overlap (any overlap between search interval and route interval)
                 # Overlap condition: not (search ends before route starts OR search starts after route ends)
                 if (search.date_to < pickup_date) or (search.date_from > return_date):
                     continue
-                    
+
                 # Check if locations match search criteria
                 if not wildcard_match(search.origin, origin):
                     continue
@@ -68,7 +72,7 @@ def check_hertz():
                 latest_return = None
                 available_at = datetime.datetime.fromisoformat(route.get('availableAt', ''))
                 latest_return = datetime.datetime.fromisoformat(route.get('latestReturn', ''))
-                
+
                 # Format dates in European style with weekday names
                 pickup_str = pickup_date.strftime('%a %d/%m/%Y')
                 return_str = return_date.strftime('%a %d/%m/%Y')
@@ -92,5 +96,5 @@ def check_hertz():
                     available_at=available_at,
                     latest_return=latest_return,
                     travel_time=travel_time,
-                    car_type=car_model
+                    car_type=car_model,
                 )

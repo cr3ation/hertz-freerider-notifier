@@ -137,7 +137,14 @@ def car_details(model, description='', information=''):
         notes.append(next((label for pattern, label in NOTE_TRANSLATIONS if pattern.search(text)), text))
 
     if len(tokens) < 2:  # "Personbil" = model not announced
-        return {'name': '', 'spec': '', 'raw': raw, 'tags': ['Electric'] if electric_note else [], 'van': False, 'notes': notes}
+        return {
+            'name': '',
+            'spec': '',
+            'raw': raw,
+            'tags': ['Electric'] if electric_note else [],
+            'van': False,
+            'notes': notes,
+        }
 
     brand = BRANDS.get(tokens[0], tokens[0].title())
     name_tokens = []
@@ -169,7 +176,7 @@ def car_details(model, description='', information=''):
     return {
         'name': f"{brand} {' '.join(name_tokens)}".strip(),
         # Everything after brand and model, as Hertz wrote it ('B3 FWD AUT PLUS DAR')
-        'spec': ' '.join(raw.split()[1 + len(name_tokens):]),
+        'spec': ' '.join(raw.split()[1 + len(name_tokens) :]),
         'raw': raw,
         'tags': tags,
         'van': bool(VAN_WORDS.search(joined)),
@@ -229,8 +236,13 @@ def build_routes(raw_data, searches, notified_ids, now):
     # Identical cars (same stations, times and model) become one row with a count
     groups = {}
     for route, available_at, latest_return in routes:
-        key = ((route.get('pickupLocation') or {}).get('name'), (route.get('returnLocation') or {}).get('name'),
-               route.get('availableAt'), route.get('latestReturn'), route.get('carModel'))
+        key = (
+            (route.get('pickupLocation') or {}).get('name'),
+            (route.get('returnLocation') or {}).get('name'),
+            route.get('availableAt'),
+            route.get('latestReturn'),
+            route.get('carModel'),
+        )
         groups.setdefault(key, []).append((route, available_at, latest_return))
     representative = {}
     for members in groups.values():
@@ -269,24 +281,26 @@ def build_routes(raw_data, searches, notified_ids, now):
             warnings.append('Pickup only during opening hours')
         alternatives = [r for r in by_offer.get(route.get('transportOfferId'), []) if str(r['id']) not in ride_ids]
 
-        rows.append({
-            'id': row_id,
-            'ride_ids': ride_ids,
-            'origin': origin,
-            'destination': destination,
-            'search': ' | '.join(location_search_text(loc['name'], loc['city']) for loc in (origin, destination)),
-            'count': len(members),
-            'alternatives_count': len(alternatives),
-            'available_at': available_at,
-            'latest_return': latest_return,
-            'available_now': available_now,
-            'pickup_in': '' if available_now else format_until(available_at, now),
-            'km': km,
-            'duration': format_duration(minutes),
-            'car': car,
-            'matches': [s.id for s in matches],
-            'notified': any(i in notified_ids for i in ride_ids),
-        })
+        rows.append(
+            {
+                'id': row_id,
+                'ride_ids': ride_ids,
+                'origin': origin,
+                'destination': destination,
+                'search': ' | '.join(location_search_text(loc['name'], loc['city']) for loc in (origin, destination)),
+                'count': len(members),
+                'alternatives_count': len(alternatives),
+                'available_at': available_at,
+                'latest_return': latest_return,
+                'available_now': available_now,
+                'pickup_in': '' if available_now else format_until(available_at, now),
+                'km': km,
+                'duration': format_duration(minutes),
+                'car': car,
+                'matches': [s.id for s in matches],
+                'notified': any(i in notified_ids for i in ride_ids),
+            }
+        )
         details[row_id] = {
             'id': row_id,
             'from': origin,
@@ -302,12 +316,17 @@ def build_routes(raw_data, searches, notified_ids, now):
             'car': car,
             'count': len(members),
             'warnings': warnings,
-            'alternatives': [{
-                'id': representative.get(str(r['id']), str(r['id'])),
-                'to': location_names((r.get('returnLocation') or {}).get('name'), (r.get('returnLocation') or {}).get('city'))[0],
-                'km': round(r.get('originalDistance') or r.get('distance') or 0),
-                'duration': format_duration(r.get('originalTravelTime') or r.get('travelTime')),
-            } for r in sorted(alternatives, key=lambda r: r.get('priorityOrder') or 0)],
+            'alternatives': [
+                {
+                    'id': representative.get(str(r['id']), str(r['id'])),
+                    'to': location_names(
+                        (r.get('returnLocation') or {}).get('name'), (r.get('returnLocation') or {}).get('city')
+                    )[0],
+                    'km': round(r.get('originalDistance') or r.get('distance') or 0),
+                    'duration': format_duration(r.get('originalTravelTime') or r.get('travelTime')),
+                }
+                for r in sorted(alternatives, key=lambda r: r.get('priorityOrder') or 0)
+            ],
         }
 
     rows.sort(key=lambda r: (r['origin']['short'].lower(), r['available_at']))

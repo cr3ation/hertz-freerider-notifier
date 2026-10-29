@@ -1,14 +1,19 @@
-import os, requests, logging, re
-from datetime import datetime
+import logging
+import os
+import re
+
+import requests
 from django.core.cache import cache
 
 API_URL = 'https://www.hertzfreerider.se/api/transport-routes/?country=SWEDEN'
 LOCATIONS_URL = 'https://www.hertzfreerider.se/api/locations/'
 
+
 def fetch_routes():
     resp = requests.get(API_URL, timeout=10)
     resp.raise_for_status()
     return resp.json()
+
 
 def fetch_location_names():
     """All Hertz station names (used for autocomplete), cached for a day."""
@@ -25,9 +30,11 @@ def fetch_location_names():
         cache.set('hertz_location_names', names, 24 * 3600 if names else 300)
     return names
 
+
 def wildcard_match(pattern, text):
     pattern = '^' + re.escape(pattern).replace('\\*', '.*') + '$'
     return re.match(pattern, text, re.IGNORECASE) is not None
+
 
 def send_pushover(message, *, title='Hertz Freerider', url=None, url_title=None, html=False, priority=0):
     """Send a Pushover notification.

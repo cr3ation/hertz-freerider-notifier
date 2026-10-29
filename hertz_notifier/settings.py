@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -101,7 +102,7 @@ HERTZ_CHECK_INTERVAL = float(os.getenv('HERTZ_CHECK_INTERVAL', '120'))  # second
 CELERY_BEAT_SCHEDULE = {
     'check_hertz_freerider': {
         'task': 'scheduler.tasks.check_hertz',
-    'schedule': HERTZ_CHECK_INTERVAL,
+        'schedule': HERTZ_CHECK_INTERVAL,
     },
 }
 

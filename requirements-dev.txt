@@ -1,0 +1,6 @@
+# Tools for tests and linting (not installed in the Docker image)
+-r requirements.txt
+pytest~=9.1.1
+pytest-django~=4.14.0
+# Exact version so formatting and lint results don't change between runs
+ruff==0.17.1

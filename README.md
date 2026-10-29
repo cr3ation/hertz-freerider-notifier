@@ -83,6 +83,7 @@ docker compose exec app python manage.py shell -c "from scheduler.tasks import c
 ## Development & troubleshooting
 
 * The source tree is mounted into the containers. After code changes, run `docker compose restart app worker beat`.
+* Tests and lint: `pip install -r requirements-dev.txt`, then `pytest` and `ruff check .`. CI runs both, plus `ruff format --check`, on every pull request.
 * Logs: `docker compose logs -f app worker beat`.
 * Debugging: with `DEBUG=1`, attach VS Code ("Python: Remote Attach") to `localhost:5678` (app) or `localhost:5679` (worker).
 * Database login errors after changing `DB_PASS`: `docker compose down -v && docker compose up --build -d`. **This deletes all data.**

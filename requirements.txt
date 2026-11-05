@@ -9,4 +9,4 @@ python-dotenv~=1.2
 gunicorn~=26.2
 whitenoise~=6.12
 # Draws the route map attached to notifications
-pillow~=12.3.0
+pillow~=13.0.0

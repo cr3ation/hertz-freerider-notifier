@@ -1,7 +1,7 @@
 # Development tools: tests, linting and the debugger (only in the image built by compose.dev.yml)
 -r requirements.txt
 debugpy~=1.8.22
-pytest~=9.1.1
+pytest~=9.2.0
 pytest-django~=4.14.0
 # Exact version so formatting and lint results don't change between runs
 ruff==0.17.1

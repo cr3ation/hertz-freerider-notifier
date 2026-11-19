@@ -1,7 +1,7 @@
 # Versions checked October 2026 for Python 3.14 and Django 6.1 (security support until December 2027).
 # "~=" picks up patch/security releases when the image is rebuilt, but never a new feature release.
 Django~=6.1.2
-psycopg[binary]~=3.3.6
+psycopg[binary]~=3.3.8
 # The [redis] extra pins a redis client version that Celery's transport (kombu) supports
 celery[redis]~=5.6.3
 requests~=2.34
